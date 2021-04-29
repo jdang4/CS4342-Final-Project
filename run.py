@@ -2,8 +2,34 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
 
-
+def perform_softmax(X, y):
+    # do some randomization on ytr
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
+    sm = LogisticRegression()
+    sm.fit(X_train, y_train)
+    yhat = sm.predict_proba(X_test)
+    
+    yhat = yhat[:, 1]
+    
+    score = metrics.roc_auc_score(y_test, yhat, average=None)
+    
+    print(f"\nAUC Score: {score}\n")
+    
+    metrics.plot_roc_curve(sm, X_test, y_test)
+    plt.show()
+    
+    
+def transform_categorical(array):
+    enc = OneHotEncoder(handle_unknown='ignore')
+    enc.fit(array)
+    
+    return enc.transform(array).toarray()
+    
 if __name__ == "__main__":
     data_path = f'data{os.sep}'
     train_path = data_path + 'train.csv'
@@ -95,4 +121,15 @@ if __name__ == "__main__":
         'HasDetections':                                        'int8'
     }
     
-    train_data = pd.read_csv(train_path, nrows=1000, dtype=dtypes)
+    train_data = pd.read_csv(train_path, nrows=1000)
+    
+    Xtr = train_data[["Firewall", "HasTpm"]].to_numpy()
+    ytr = train_data["HasDetections"].to_numpy()
+    
+    Xtr = np.nan_to_num(Xtr)
+    ytr = np.nan_to_num(ytr)
+    
+    perform_softmax(Xtr, ytr)
+    
+    
+    

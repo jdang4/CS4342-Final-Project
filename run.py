@@ -12,8 +12,8 @@ from matplotlib import pyplot
 from sklearn import metrics
 
 def perform_softmax(X, y, labels, plot=False):
-    # do some randomization on ytr
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=1)
     model = LogisticRegression(C=0.05, tol=0.001, penalty='l2')
     model.fit(X_train, y_train)
     yhat = model.predict_proba(X_test)
@@ -147,6 +147,19 @@ if __name__ == "__main__":
     }
     
     train_data = pd.read_csv(train_path, nrows=1000)
+
+    os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
+
+    #turn Census_OSVersion into a unix timestamp.
+    for k,v in os_times.items():
+        os_times[k] = v.timestamp()
+
+    #map each version to a timestamp
+    os_timestamps = train_data["Census_OSVersion"].map(os_times)
+
+    train_data["OSVersionTimestamps"] = os_timestamps
+
+    print(train_data[["Census_OSVersion", "OSVersionTimestamps"]])
     
     X_labels = ['Firewall', 'HasTpm']
     Xtr = train_data[X_labels].to_numpy()

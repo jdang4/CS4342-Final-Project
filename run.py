@@ -9,7 +9,7 @@ from sklearn import metrics
 
 def perform_softmax(X, y):
     # do some randomization on ytr
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=1)
     sm = LogisticRegression()
     sm.fit(X_train, y_train)
     yhat = sm.predict_proba(X_test)

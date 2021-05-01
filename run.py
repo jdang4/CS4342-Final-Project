@@ -5,8 +5,9 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.feature_selection import f_regression
+from sklearn.feature_selection import f_classif, chi2
 from sklearn.feature_selection import SelectKBest
+from sklearn.ensemble import ExtraTreesClassifier
 from matplotlib import pyplot
 
 from sklearn import metrics
@@ -32,18 +33,16 @@ def perform_softmax(X, y, labels, plot=False):
     
 
 def feature_importance(X, y, labels):
-    # configure to select all features
-    fs = SelectKBest(score_func=f_regression, k='all')
     
-    # learn relationship from training data
-    fs.fit(X, y)
+    model = ExtraTreesClassifier() 
+    model.fit(X, y)
     
-    X_train_fs = fs.transform(X)
-    
+    importances = model.feature_importances_
+
     print("\n################# FEATURE IMPORTANCES: #################\n")
     # scores for the features
-    for i in range(len(fs.scores_)):
-        print(f'Feature {labels[i]}: {fs.scores_[i]}')
+    for i in range(len(importances)):
+        print(f'Feature {labels[i]}: {importances[i]}')
         
     print("\n########################################################\n")
     

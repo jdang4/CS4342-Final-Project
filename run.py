@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
     print(train_data[["Census_OSVersion", "OSVersionTimestamps"]])
     
-    X_labels = ['Firewall', 'HasTpm']
+    X_labels = ['Firewall', 'HasTpm', 'OSVersionTimestamps']
     Xtr = train_data[X_labels].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()
     

@@ -31,6 +31,8 @@ def perform_softmax(X, y, labels, plot=False):
         
     return X_train, y_train
     
+def to_integer(dt_time):
+    return 10000*dt_time.year + 100*dt_time.month + dt_time.day
 
 def feature_importance(X, y, labels):
     
@@ -56,7 +58,12 @@ def transform_categorical(array):
     
 if __name__ == "__main__":
     data_path = f'data{os.sep}'
-    train_path = data_path + 'train.csv'
+    useSubset = True
+    train_path = ""
+    if not useSubset:
+        train_path = data_path + 'train.csv'
+    else:
+        train_path = "train_subset.csv"
     test_path = data_path + 'test.csv'
     
     dtypes = {
@@ -175,7 +182,8 @@ if __name__ == "__main__":
 
     os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
 
-    #turn Census_OSVersion into a unix timestamp.
+    datedictAS = np.load('AvSigVersionTimestamps.npy', allow_pickle=True)[()]
+
     for k,v in os_times.items():
         os_times[k] = v.timestamp()
 
@@ -183,13 +191,15 @@ if __name__ == "__main__":
     os_timestamps = train_data["Census_OSVersion"].map(os_times)
 
     train_data["OSVersionTimestamps"] = os_timestamps
-
-    print(train_data[["Census_OSVersion", "OSVersionTimestamps"]])
+    #print(type(datedictAS))
+    train_data['DateAS'] = train_data['AvSigVersion'].map(datedictAS)
+    train_data['DateAS'] = pd.to_numeric(train_data['DateAS'], errors='coerce').astype(np.float64)
     
-    X_labels = ['Firewall', 'HasTpm']
+    X_labels = ['Firewall', 'HasTpm', 'OSVersionTimestamps', 'DateAS']
+
     Xtr = train_data[X_labels].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()
-    
+
     Xtr = np.nan_to_num(Xtr)
     
     X_train, y_train = perform_softmax(Xtr, ytr, X_labels)

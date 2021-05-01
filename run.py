@@ -135,7 +135,6 @@ if __name__ == "__main__":
     train_data["OSVersionTimestamps"] = os_timestamps
 
     print(train_data[["Census_OSVersion", "OSVersionTimestamps"]])
-    input()
     
     Xtr = train_data[["Firewall", "HasTpm"]].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()

@@ -9,6 +9,7 @@ from sklearn.feature_selection import f_classif, chi2
 from sklearn.feature_selection import SelectKBest
 from sklearn.ensemble import ExtraTreesClassifier
 from matplotlib import pyplot
+from datetime import datetime
 
 from sklearn import metrics
 
@@ -48,13 +49,37 @@ def feature_importance(X, y, labels):
         
     print("\n########################################################\n")
     
+    
+def convert(x):
+    try:
+        d = datetime.strptime(x.split('.')[4], '%y%m%d-%H%M').timestamp()
+    
+    except:
+        d = np.nan
+        
+    return d
 
+  
+def add_timestamp(train_data):
+    os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
     
-def transform_categorical(array):
-    enc = OneHotEncoder(handle_unknown='ignore')
-    enc.fit(array)
+    datedictAS = np.load('AvSigVersionTimestamps.npy', allow_pickle=True)[()]
+
+    for k,v in os_times.items():
+        os_times[k] = v.timestamp()
+
+    #map each version to a timestamp
+    os_timestamps = train_data["Census_OSVersion"].map(os_times)
+
+    train_data["Census_OSVersion"] = os_timestamps
+    #print(type(datedictAS))
+    train_data['AvSigVersion'] = train_data['AvSigVersion'].map(datedictAS)
+    train_data['AvSigVersion'] = pd.to_numeric(train_data['AvSigVersion'], errors='coerce').astype(np.float64)
     
-    return enc.transform(array).toarray()
+    train_data['OsBuildLab'] = train_data['OsBuildLab'].map(convert)
+    
+    return train_data
+    
     
 if __name__ == "__main__":
     data_path = f'data{os.sep}'
@@ -169,23 +194,10 @@ if __name__ == "__main__":
     ]
     
     train_data = train_data.drop(missing_columns, axis=1)
-
-    os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
-
-    datedictAS = np.load('AvSigVersionTimestamps.npy', allow_pickle=True)[()]
-
-    for k,v in os_times.items():
-        os_times[k] = v.timestamp()
-
-    #map each version to a timestamp
-    os_timestamps = train_data["Census_OSVersion"].map(os_times)
-
-    train_data["Census_OSVersion"] = os_timestamps
-    #print(type(datedictAS))
-    train_data['AvSigVersion'] = train_data['AvSigVersion'].map(datedictAS)
-    train_data['AvSigVersion'] = pd.to_numeric(train_data['AvSigVersion'], errors='coerce').astype(np.float64)
     
-    X_labels = ['Firewall', 'HasTpm', 'Census_OSVersion', 'AvSigVersion']
+    train_data = add_timestamp(train_data)
+    
+    X_labels = ['Firewall', 'HasTpm', 'Census_OSVersion', 'AvSigVersion', 'OsBuildLab']
 
     Xtr = train_data[X_labels].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()

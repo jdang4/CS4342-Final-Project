@@ -157,10 +157,7 @@ if __name__ == "__main__":
     os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
 
     datedictAS = np.load('AvSigVersionTimestamps.npy', allow_pickle=True)[()]
-    #print(datedictAS)
-    #print(type(datedictAS))
-    #datedictAS = [dict([a, to_integer(x)] for a, x in datedictAS.items())]
-    #turn Census_OSVersion into a unix timestamp.
+
     for k,v in os_times.items():
         os_times[k] = v.timestamp()
 
@@ -171,21 +168,9 @@ if __name__ == "__main__":
     #print(type(datedictAS))
     train_data['DateAS'] = train_data['AvSigVersion'].map(datedictAS)
     train_data['DateAS'] = pd.to_numeric(train_data['DateAS'], errors='coerce').astype(np.float64)
-    #train_data['DateAS'] = train_data['DateAS']/(10 ** 19)#train_data['DateAS'].astype(np.int64)
-    #train_data['DateAS'] = train_data['DateAS'].astype(np.int64)
-    #print()
-    #print(type(train_data['DateAS'][0]))
-    #train_data['DateAS'].apply(lambda x: x.value)
-    #print(type(train_data['DateAS'][0]))
-    #train_data['DateAS'] = pd.to_timedelta((train_data['DateAS']))
-    print(train_data[['AvSigVersion', 'DateAS']])
-    print(train_data[["Census_OSVersion", "OSVersionTimestamps"]])
-    print(type(train_data["OSVersionTimestamps"]))
-    print((train_data["DateAS"][0]))
-    print((train_data["OSVersionTimestamps"][0]))
     
     X_labels = ['Firewall', 'HasTpm', 'OSVersionTimestamps', 'DateAS']
-    #print(type(train_data['DateAS'][0]))
+
     Xtr = train_data[X_labels].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()
 

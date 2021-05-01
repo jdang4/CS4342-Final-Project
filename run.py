@@ -122,6 +122,20 @@ if __name__ == "__main__":
     }
     
     train_data = pd.read_csv(train_path, nrows=1000)
+
+    os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
+
+    #turn Census_OSVersion into a unix timestamp.
+    for k,v in os_times.items():
+        os_times[k] = v.timestamp()
+
+    #map each version to a timestamp
+    os_timestamps = train_data["Census_OSVersion"].map(os_times)
+
+    train_data["OSVersionTimestamps"] = os_timestamps
+
+    print(train_data[["Census_OSVersion", "OSVersionTimestamps"]])
+    input()
     
     Xtr = train_data[["Firewall", "HasTpm"]].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()

@@ -36,7 +36,7 @@ def to_integer(dt_time):
 
 def feature_importance(X, y, labels):
     
-    model = ExtraTreesClassifier() 
+    model = ExtraTreesClassifier(random_state=1) 
     model.fit(X, y)
     
     importances = model.feature_importances_
@@ -155,19 +155,7 @@ if __name__ == "__main__":
     pd.set_option('display.max_rows', None)
     
     train_data = pd.read_csv(train_path, nrows=1000)
-    '''
-    percent_missing = train_data.isnull().sum() * 100 / len(train_data)
-    
-    df = pd.DataFrame({
-        'column_name': train_data.columns,
-        'percent_missing': percent_missing
-    })
-    
-    print(df)
-    
-    input()
-    ''' 
-    
+     
     missing_columns = [
         'DefaultBrowsersIdentifier',
         'PuaMode',
@@ -176,6 +164,8 @@ if __name__ == "__main__":
         'Census_IsFlightingInternal',
         'Census_ThresholdOptIn',
         'Census_IsWIMBootEnabled',
+        'OsVer',
+        'EngineVersion'
     ]
     
     train_data = train_data.drop(missing_columns, axis=1)
@@ -190,12 +180,12 @@ if __name__ == "__main__":
     #map each version to a timestamp
     os_timestamps = train_data["Census_OSVersion"].map(os_times)
 
-    train_data["OSVersionTimestamps"] = os_timestamps
+    train_data["Census_OSVersion"] = os_timestamps
     #print(type(datedictAS))
-    train_data['DateAS'] = train_data['AvSigVersion'].map(datedictAS)
-    train_data['DateAS'] = pd.to_numeric(train_data['DateAS'], errors='coerce').astype(np.float64)
+    train_data['AvSigVersion'] = train_data['AvSigVersion'].map(datedictAS)
+    train_data['AvSigVersion'] = pd.to_numeric(train_data['AvSigVersion'], errors='coerce').astype(np.float64)
     
-    X_labels = ['Firewall', 'HasTpm', 'OSVersionTimestamps', 'DateAS']
+    X_labels = ['Firewall', 'HasTpm', 'Census_OSVersion', 'AvSigVersion']
 
     Xtr = train_data[X_labels].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()

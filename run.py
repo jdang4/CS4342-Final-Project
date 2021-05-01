@@ -5,14 +5,18 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import f_regression
+from sklearn.feature_selection import SelectKBest
+from matplotlib import pyplot
+
 from sklearn import metrics
 
-def perform_softmax(X, y):
+def perform_softmax(X, y, labels, plot=False):
     # do some randomization on ytr
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-    sm = LogisticRegression()
-    sm.fit(X_train, y_train)
-    yhat = sm.predict_proba(X_test)
+    model = LogisticRegression(C=0.05, tol=0.001, penalty='l2')
+    model.fit(X_train, y_train)
+    yhat = model.predict_proba(X_test)
     
     yhat = yhat[:, 1]
     
@@ -20,9 +24,30 @@ def perform_softmax(X, y):
     
     print(f"\nAUC Score: {score}\n")
     
-    metrics.plot_roc_curve(sm, X_test, y_test)
-    plt.show()
+    if plot:
+        metrics.plot_roc_curve(model, X_test, y_test)
+        plt.show()
+        
+    return X_train, y_train
     
+
+def feature_importance(X, y, labels):
+    # configure to select all features
+    fs = SelectKBest(score_func=f_regression, k='all')
+    
+    # learn relationship from training data
+    fs.fit(X, y)
+    
+    X_train_fs = fs.transform(X)
+    
+    print("\n################# FEATURE IMPORTANCES: #################\n")
+    # scores for the features
+    for i in range(len(fs.scores_)):
+        print(f'Feature {labels[i]}: {fs.scores_[i]}')
+        
+    print("\n########################################################\n")
+    
+
     
 def transform_categorical(array):
     enc = OneHotEncoder(handle_unknown='ignore')
@@ -123,13 +148,17 @@ if __name__ == "__main__":
     
     train_data = pd.read_csv(train_path, nrows=1000)
     
-    Xtr = train_data[["Firewall", "HasTpm"]].to_numpy()
+    X_labels = ['Firewall', 'HasTpm']
+    Xtr = train_data[X_labels].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()
     
     Xtr = np.nan_to_num(Xtr)
     ytr = np.nan_to_num(ytr)
     
-    perform_softmax(Xtr, ytr)
+    X_train, y_train = perform_softmax(Xtr, ytr, X_labels)
+    
+    feature_importance(X_train, y_train, X_labels)
+    
     
     
     

@@ -145,7 +145,33 @@ if __name__ == "__main__":
         'HasDetections':                                        'int8'
     }
     
+    pd.set_option('display.max_rows', None)
+    
     train_data = pd.read_csv(train_path, nrows=1000)
+    '''
+    percent_missing = train_data.isnull().sum() * 100 / len(train_data)
+    
+    df = pd.DataFrame({
+        'column_name': train_data.columns,
+        'percent_missing': percent_missing
+    })
+    
+    print(df)
+    
+    input()
+    ''' 
+    
+    missing_columns = [
+        'DefaultBrowsersIdentifier',
+        'PuaMode',
+        'Census_ProcessorClass',
+        'Census_InternalBatteryType',
+        'Census_IsFlightingInternal',
+        'Census_ThresholdOptIn',
+        'Census_IsWIMBootEnabled',
+    ]
+    
+    train_data = train_data.drop(missing_columns, axis=1)
 
     os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
 
@@ -160,12 +186,11 @@ if __name__ == "__main__":
 
     print(train_data[["Census_OSVersion", "OSVersionTimestamps"]])
     
-    X_labels = ['Firewall', 'HasTpm', 'OSVersionTimestamps']
+    X_labels = ['Firewall', 'HasTpm']
     Xtr = train_data[X_labels].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()
     
     Xtr = np.nan_to_num(Xtr)
-    ytr = np.nan_to_num(ytr)
     
     X_train, y_train = perform_softmax(Xtr, ytr, X_labels)
     

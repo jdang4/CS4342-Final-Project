@@ -16,7 +16,7 @@ from sklearn import metrics
 def perform_softmax(X, y, labels, plot=False):
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=1)
-    model = LogisticRegression(C=0.05, tol=0.001, penalty='l2')
+    model = LogisticRegression(C=0.05, tol=0.0001, penalty='l2', max_iter=100, solver='sag')
     model.fit(X_train, y_train)
     yhat = model.predict_proba(X_test)
     
@@ -79,6 +79,21 @@ def add_timestamp(train_data):
     train_data['OsBuildLab'] = train_data['OsBuildLab'].map(convert)
     
     return train_data
+
+def transform_categorical(df):
+    cols = df.select_dtypes(include=['category']).columns[1:]
+    categorical_cols = list(cols)
+    categorical_cols.remove('AppVersion')
+    list_of_one_hots = [df]
+    
+    for category in categorical_cols:
+        tmp_df = pd.get_dummies(df[category], prefix=category)
+        list_of_one_hots.append(tmp_df)
+        
+    new_df = pd.concat(list_of_one_hots, axis=1)
+    new_df = new_df.drop(categorical_cols, axis=1)
+    
+    return new_df
     
     
 if __name__ == "__main__":
@@ -179,7 +194,7 @@ if __name__ == "__main__":
     
     pd.set_option('display.max_rows', None)
     
-    train_data = pd.read_csv(train_path, nrows=1000)
+    train_data = pd.read_csv(train_path, nrows=1000, dtype=dtypes)
      
     missing_columns = [
         'DefaultBrowsersIdentifier',
@@ -197,14 +212,16 @@ if __name__ == "__main__":
     
     train_data = add_timestamp(train_data)
     
-    X_labels = ['Firewall', 'HasTpm', 'Census_OSVersion', 'AvSigVersion', 'OsBuildLab']
+    train_data = transform_categorical(train_data)
 
+    X_labels = ['Firewall', 'HasTpm', 'Census_OSVersion', 'AvSigVersion', 'OsBuildLab']
+    
     Xtr = train_data[X_labels].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()
 
     Xtr = np.nan_to_num(Xtr)
     
-    X_train, y_train = perform_softmax(Xtr, ytr, X_labels)
+    X_train, y_train = perform_softmax(Xtr, ytr, X_labels, False)
     
     feature_importance(X_train, y_train, X_labels)
     

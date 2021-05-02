@@ -10,6 +10,7 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.ensemble import ExtraTreesClassifier
 from matplotlib import pyplot
 from datetime import datetime
+from functools import cmp_to_key
 
 from sklearn import metrics
 
@@ -94,7 +95,44 @@ def transform_categorical(df):
     new_df = new_df.drop(categorical_cols, axis=1)
     
     return new_df
-    
+
+#orders and labels appVersions by time.
+def label_appVersion_time(train_data):
+
+    def sortAppVersion_time(a, b):
+        aArr = a.split('.')
+        bArr = b.split('.')
+
+        for i in range(0, 4):
+
+            if int(aArr[i]) != int(bArr[i]):
+                return int(aArr[i]) - int(bArr[i])
+
+        #if we reach here, they were equal
+        return 0
+
+
+
+    appVersions = train_data["AppVersion"].unique().tolist()
+
+    appVersions.sort(key=cmp_to_key(sortAppVersion_time))
+
+    argsort_dict = {version:idx for idx, version in enumerate(appVersions, start=1)}
+
+    train_data["AppVersionTimeOrder"] = train_data["AppVersion"].map(argsort_dict)
+
+    '''
+    print("TESTING APP VERSION TIME ORDER!!!")
+    print(train_data[['AppVersion', 'AppVersionTimeOrder']].head())
+
+    print("Order was: ")
+    print(appVersions)
+    input()
+    '''
+
+    return train_data
+
+
     
 if __name__ == "__main__":
     data_path = f'data{os.sep}'
@@ -211,6 +249,8 @@ if __name__ == "__main__":
     train_data = train_data.drop(missing_columns, axis=1)
     
     train_data = add_timestamp(train_data)
+
+    train_data = label_appVersion_time(train_data)
     
     train_data = transform_categorical(train_data)
 

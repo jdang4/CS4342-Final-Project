@@ -36,30 +36,17 @@ def perform_softmax(X, y, labels, plot=False):
 def to_integer(dt_time):
     return 10000*dt_time.year + 100*dt_time.month + dt_time.day
 
-def sort_tuple(list):
-    list.sort(key= lambda x: x[1], reverse=True)
-    
-    return list
-
 def feature_importance(X, y, labels):
     
     model = ExtraTreesClassifier(random_state=1) 
     model.fit(X, y)
     
     importances = model.feature_importances_
-    
-    feature_list = []
-    # scores for the features
-    for i in range(len(importances)):
-        feature_list.append( (labels[i], importances[i]) )
-        
-    feature_list = sort_tuple(feature_list)
 
     print("\n################# FEATURE IMPORTANCES: #################\n")
-    
-    for i,v in feature_list:
-        print(f"Feature {i}: {v}")
-        
+    # scores for the features
+    for i in range(len(importances)):
+        print(f'Feature {labels[i]}: {importances[i]}')
         
     print("\n########################################################\n")
     
@@ -132,8 +119,7 @@ def label_appVersion_time(train_data):
 
     argsort_dict = {version:idx for idx, version in enumerate(appVersions, start=1)}
 
-    train_data["AppVersionTimeOrder"] = train_data["AppVersion"].map(argsort_dict) 
-    train_data[["AppVersionTimeOrder"]] = train_data[["AppVersionTimeOrder"]].apply(pd.to_numeric)
+    train_data["AppVersionTimeOrder"] = train_data["AppVersion"].map(argsort_dict)
 
     '''
     print("TESTING APP VERSION TIME ORDER!!!")
@@ -150,7 +136,7 @@ def label_appVersion_time(train_data):
     
 if __name__ == "__main__":
     data_path = f'data{os.sep}'
-    useSubset = False
+    useSubset = True
     train_path = ""
     if not useSubset:
         train_path = data_path + 'train.csv'
@@ -246,7 +232,7 @@ if __name__ == "__main__":
     
     pd.set_option('display.max_rows', None)
     
-    train_data = pd.read_csv(train_path, nrows=100, dtype=dtypes)
+    train_data = pd.read_csv(train_path, nrows=1000, dtype=dtypes)
      
     missing_columns = [
         'DefaultBrowsersIdentifier',
@@ -266,13 +252,9 @@ if __name__ == "__main__":
 
     train_data = label_appVersion_time(train_data)
     
-    #print(train_data['AppVersionTimeOrder'].dtype)
-    
     train_data = transform_categorical(train_data)
 
-    X_labels = list(train_data.columns[1:])
-    X_labels.remove("AppVersion") 
-    X_labels.remove("HasDetections")
+    X_labels = ['Firewall', 'HasTpm', 'Census_OSVersion', 'AvSigVersion', 'OsBuildLab']
     Xtr = train_data[X_labels].to_numpy()
     ytr = train_data["HasDetections"].to_numpy()
 

@@ -109,7 +109,15 @@ def transform_categorical(df):
     
     return new_df
 
+def label_appVersion_count(trainData):
+    vc_item1 = train_data['AppVersion'].value_counts()
+
+    train_data['AppVersionCounts'] = train_data['AppVersion'].apply(lambda x: vc_item1[x])
+
+    return train_data;
+
 #orders and labels appVersions by time.
+
 def label_appVersion_time(train_data):
 
     def sortAppVersion_time(a, b):
@@ -261,10 +269,12 @@ if __name__ == "__main__":
     ]
     
     train_data = train_data.drop(missing_columns, axis=1)
-    
+
     train_data = add_timestamp(train_data)
 
     train_data = label_appVersion_time(train_data)
+
+    train_data = label_appVersion_count(train_data)
     
     #print(train_data['AppVersionTimeOrder'].dtype)
     

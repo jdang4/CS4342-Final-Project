@@ -7,17 +7,40 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import f_classif, chi2
 from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import ExtraTreesClassifier
 from matplotlib import pyplot
 from datetime import datetime
 from functools import cmp_to_key
+import sys
+import math
 
 from sklearn import metrics
+
+#Number of features as a command line argument
+NUM_FEATURES = 5
+
+if len(sys.argv) > 1:
+    NUM_FEATURES = int(sys.argv[1])
 
 def perform_softmax(X, y, labels, plot=False):
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=1)
-    model = LogisticRegression(C=0.05, tol=0.0001, penalty='l2', max_iter=100, solver='sag')
+
+    trees = ExtraTreesClassifier(random_state=1)
+    trees.fit(X_train, y_train)
+
+    selector = SelectFromModel(trees, prefit=True, threshold=-np.inf, max_features=NUM_FEATURES)
+
+    print(X_train.shape)
+
+    #NEW X_TRAIN FROM SELECTED FEATURES:
+    X_train = selector.transform(X_train)
+    X_test = selector.transform(X_test)
+
+    print(X_train.shape)
+
+    model = LogisticRegression(C=0.05, tol=0.0001, penalty='l2', max_iter=1000, solver='sag')
     model.fit(X_train, y_train)
     yhat = model.predict_proba(X_test)
     
@@ -31,7 +54,7 @@ def perform_softmax(X, y, labels, plot=False):
         metrics.plot_roc_curve(model, X_test, y_test)
         plt.show()
         
-    return X_train, y_train
+    return X_train, y_train, selector
     
 def to_integer(dt_time):
     return 10000*dt_time.year + 100*dt_time.month + dt_time.day
@@ -41,12 +64,16 @@ def sort_tuple(list):
     
     return list
 
-def feature_importance(X, y, labels):
+def feature_importance(X, y, labels, selection):
     
     model = ExtraTreesClassifier(random_state=1) 
     model.fit(X, y)
     
+    mask = selection.get_support()
+
     importances = model.feature_importances_
+
+    labels = np.array(labels)[mask]
     
     feature_list = []
     # scores for the features
@@ -246,7 +273,7 @@ if __name__ == "__main__":
     
     pd.set_option('display.max_rows', None)
     
-    train_data = pd.read_csv(train_path, nrows=100, dtype=dtypes)
+    train_data = pd.read_csv(train_path, nrows=100000, dtype=dtypes)
      
     missing_columns = [
         'DefaultBrowsersIdentifier',
@@ -278,9 +305,9 @@ if __name__ == "__main__":
 
     Xtr = np.nan_to_num(Xtr)
     
-    X_train, y_train = perform_softmax(Xtr, ytr, X_labels, False)
+    X_train, y_train, selection = perform_softmax(Xtr, ytr, X_labels, False)
     
-    feature_importance(X_train, y_train, X_labels)
+    feature_importance(X_train, y_train, X_labels, selection)
     
     
     

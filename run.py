@@ -14,6 +14,7 @@ from datetime import datetime
 from functools import cmp_to_key
 import sys
 import math
+from sklearn import preprocessing
 
 from sklearn import metrics
 
@@ -38,9 +39,13 @@ def perform_softmax(X, y, labels, plot=False):
     X_train = selector.transform(X_train)
     X_test = selector.transform(X_test)
 
+    #standardize data
+    X_train = preprocessing.StandardScaler().fit_transform(X_train)
+    X_test = preprocessing.StandardScaler().fit_transform(X_test)
+
     print(X_train.shape)
 
-    model = LogisticRegression(C=0.05, tol=0.0001, penalty='l2', max_iter=1000, solver='sag')
+    model = LogisticRegression(C=5, tol=0.0001, penalty='l2', max_iter=1000, solver='sag')
     model.fit(X_train, y_train)
     yhat = model.predict_proba(X_test)
     
@@ -296,6 +301,8 @@ if __name__ == "__main__":
     #print(train_data['AppVersionTimeOrder'].dtype)
     
     train_data = transform_categorical(train_data)
+
+    #train_data = train_data.drop(columns="AvSigVersion")
 
     X_labels = list(train_data.columns[1:])
     X_labels.remove("AppVersion") 

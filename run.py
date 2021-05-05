@@ -49,6 +49,7 @@ def perform_softmax(X, y, labels, plot=False):
     model.fit(X_train, y_train)
     yhat = model.predict_proba(X_test)
     
+    print(yhat)
     yhat = yhat[:, 1]
     
     score = metrics.roc_auc_score(y_test, yhat, average=None)
@@ -178,7 +179,12 @@ def label_appVersion_time(train_data):
 
     return train_data
 
+def label_appVersion_count(trainData):
+    vc_item1 = train_data['AppVersion'].value_counts()
 
+    train_data['AppVersionCounts'] = train_data['AppVersion'].apply(lambda x: vc_item1[x])
+
+    return train_data;
     
 if __name__ == "__main__":
     data_path = f'data{os.sep}'
@@ -297,6 +303,7 @@ if __name__ == "__main__":
     train_data = add_timestamp(train_data)
 
     train_data = label_appVersion_time(train_data)
+    train_data = label_appVersion_count(train_data)
     
     #print(train_data['AppVersionTimeOrder'].dtype)
     

@@ -24,8 +24,7 @@ NUM_FEATURES = 5
 if len(sys.argv) > 1:
     NUM_FEATURES = int(sys.argv[1])
 
-def perform_softmax(X, y, labels, plot=False):
-
+def perform_softmax(X, y, labels, train=True, plot=False):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=1)
 
     trees = ExtraTreesClassifier(random_state=1)
@@ -60,7 +59,7 @@ def perform_softmax(X, y, labels, plot=False):
         metrics.plot_roc_curve(model, X_test, y_test)
         plt.show()
         
-    return X_train, y_train, selector
+    return X_train, y_train, selector, model
     
 def to_integer(dt_time):
     return 10000*dt_time.year + 100*dt_time.month + dt_time.day
@@ -281,10 +280,9 @@ if __name__ == "__main__":
         'Wdft_RegionIdentifier':                                'float32',
         'HasDetections':                                        'int8'
     }
-    
-    pd.set_option('display.max_rows', None)
-    
+
     train_data = pd.read_csv(train_path, nrows=100000, dtype=dtypes)
+    test_data = pd.read_csv(test_path, dtype=dtypes)    
      
     missing_columns = [
         'DefaultBrowsersIdentifier',
@@ -299,30 +297,53 @@ if __name__ == "__main__":
     ]
     
     train_data = train_data.drop(missing_columns, axis=1)
+    test_data = test_data.drop(missing_columns, axis=1)
     
-    train_data = add_timestamp(train_data)
+    train_data = add_timestamp(test_data)
+    test_data = add_timestamp(test_data)
 
     train_data = label_appVersion_time(train_data)
     train_data = label_appVersion_count(train_data)
     
+    test_data = label_appVersion_time(test_data)
+    test_data = label_appVersion_count(test_data)
+    
     #print(train_data['AppVersionTimeOrder'].dtype)
     
     train_data = transform_categorical(train_data)
+    test_data = transform_categorical(test_data)
 
     #train_data = train_data.drop(columns="AvSigVersion")
 
     X_labels = list(train_data.columns[1:])
     X_labels.remove("AppVersion") 
     X_labels.remove("HasDetections")
+    
     Xtr = train_data[X_labels].to_numpy()
+    Xte = test_data[X_labels].to_numpy()
+    
     ytr = train_data["HasDetections"].to_numpy()
 
     Xtr = np.nan_to_num(Xtr)
+    Xte = np.nan_to_num(Xte)
     
-    X_train, y_train, selection = perform_softmax(Xtr, ytr, X_labels, False)
+    X_train, y_train, selection, model = perform_softmax(Xtr, ytr, X_labels, False)
     
-    feature_importance(X_train, y_train, X_labels, selection)
+    #feature_importance(X_train, y_train, X_labels, selection)
     
+    Xte = selection.transform(Xte)
+    Xte = preprocessing.StandardScaler().fit_transform(Xte)
+
+    yte = model.predict_proba(Xte)
     
+
+    results = yte[:,1]
     
+    # Creating the template for submission to Kaggle
+    df = test_data.copy()
+    columns_to_drop = [i for i in range(1, len(test_data.columns), 1)]
+    df.drop(df.columns[columns_to_drop], axis=1, inplace=True)
+    
+    df.insert(1, "HasDetections", results)
+    df.to_csv("submission.csv", index=False)
     

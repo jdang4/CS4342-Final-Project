@@ -15,6 +15,7 @@ from functools import cmp_to_key
 import sys
 import math
 from sklearn import preprocessing
+import joblib
 
 from sklearn import metrics
 
@@ -299,6 +300,8 @@ if __name__ == "__main__":
     train_data = train_data.drop(missing_columns, axis=1)
     test_data = test_data.drop(missing_columns, axis=1)
     
+    ytr = train_data["HasDetections"].to_numpy()
+    
     train_data = add_timestamp(test_data)
     test_data = add_timestamp(test_data)
 
@@ -316,19 +319,21 @@ if __name__ == "__main__":
     #train_data = train_data.drop(columns="AvSigVersion")
 
     X_labels = list(train_data.columns[1:])
+    
     X_labels.remove("AppVersion") 
-    X_labels.remove("HasDetections")
+    #X_labels.remove("HasDetections")
     
     Xtr = train_data[X_labels].to_numpy()
     Xte = test_data[X_labels].to_numpy()
     
-    ytr = train_data["HasDetections"].to_numpy()
 
     Xtr = np.nan_to_num(Xtr)
     Xte = np.nan_to_num(Xte)
     
     X_train, y_train, selection, model = perform_softmax(Xtr, ytr, X_labels, False)
     
+    filename = 'finalized_model.sav'
+    joblib.dump(model, filename)
     #feature_importance(X_train, y_train, X_labels, selection)
     
     Xte = selection.transform(Xte)

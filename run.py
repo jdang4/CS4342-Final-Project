@@ -332,8 +332,6 @@ if __name__ == "__main__":
     
     X_train, y_train, selection, model = perform_softmax(Xtr, ytr, X_labels, False)
     
-    filename = 'finalized_model.sav'
-    joblib.dump(model, filename)
     #feature_importance(X_train, y_train, X_labels, selection)
     
     Xte = selection.transform(Xte)

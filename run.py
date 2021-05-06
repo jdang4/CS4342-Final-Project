@@ -18,6 +18,7 @@ from sklearn import preprocessing
 import joblib
 
 from sklearn import metrics
+import transform_helper as Transform 
 
 #Number of features as a command line argument
 NUM_FEATURES = 5
@@ -31,7 +32,7 @@ def perform_softmax(X, y, labels, train=True, plot=False):
     trees = ExtraTreesClassifier(random_state=1)
     trees.fit(X_train, y_train)
 
-    selector = SelectFromModel(trees, prefit=True, threshold=-np.inf, max_features=NUM_FEATURES)
+    selector = SelectFromModel(trees, prefit=True, threshold=-np.inf)
 
     print(X_train.shape)
 
@@ -60,15 +61,8 @@ def perform_softmax(X, y, labels, train=True, plot=False):
         metrics.plot_roc_curve(model, X_test, y_test)
         plt.show()
         
-    return X_train, y_train, selector, model
-    
-def to_integer(dt_time):
-    return 10000*dt_time.year + 100*dt_time.month + dt_time.day
+    return selector, model
 
-def sort_tuple(list):
-    list.sort(key= lambda x: x[1], reverse=True)
-    
-    return list
 
 def feature_importance(X, y, labels, selection):
     
@@ -86,7 +80,7 @@ def feature_importance(X, y, labels, selection):
     for i in range(len(importances)):
         feature_list.append( (labels[i], importances[i]) )
         
-    feature_list = sort_tuple(feature_list)
+    feature_list = Transform.sort_tuple(feature_list)
 
     print("\n################# FEATURE IMPORTANCES: #################\n")
     
@@ -97,95 +91,6 @@ def feature_importance(X, y, labels, selection):
     print("\n########################################################\n")
     
     
-def convert(x):
-    try:
-        d = datetime.strptime(x.split('.')[4], '%y%m%d-%H%M').timestamp()
-    
-    except:
-        d = np.nan
-        
-    return d
-
-  
-def add_timestamp(train_data):
-    os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
-    
-    datedictAS = np.load('AvSigVersionTimestamps.npy', allow_pickle=True)[()]
-
-    for k,v in os_times.items():
-        os_times[k] = v.timestamp()
-
-    #map each version to a timestamp
-    os_timestamps = train_data["Census_OSVersion"].map(os_times)
-
-    train_data["Census_OSVersion"] = os_timestamps
-    #print(type(datedictAS))
-    train_data['AvSigVersion'] = train_data['AvSigVersion'].map(datedictAS)
-    train_data['AvSigVersion'] = pd.to_numeric(train_data['AvSigVersion'], errors='coerce').astype(np.float64)
-    
-    train_data['OsBuildLab'] = train_data['OsBuildLab'].map(convert)
-    
-    return train_data
-
-def transform_categorical(df):
-    cols = df.select_dtypes(include=['category']).columns[1:]
-    categorical_cols = list(cols)
-    categorical_cols.remove('AppVersion')
-    list_of_one_hots = [df]
-    
-    for category in categorical_cols:
-        tmp_df = pd.get_dummies(df[category], prefix=category)
-        list_of_one_hots.append(tmp_df)
-        
-    new_df = pd.concat(list_of_one_hots, axis=1)
-    new_df = new_df.drop(categorical_cols, axis=1)
-    
-    return new_df
-
-#orders and labels appVersions by time.
-def label_appVersion_time(train_data):
-
-    def sortAppVersion_time(a, b):
-        aArr = a.split('.')
-        bArr = b.split('.')
-
-        for i in range(0, 4):
-
-            if int(aArr[i]) != int(bArr[i]):
-                return int(aArr[i]) - int(bArr[i])
-
-        #if we reach here, they were equal
-        return 0
-
-
-
-    appVersions = train_data["AppVersion"].unique().tolist()
-
-    appVersions.sort(key=cmp_to_key(sortAppVersion_time))
-
-    argsort_dict = {version:idx for idx, version in enumerate(appVersions, start=1)}
-
-    train_data["AppVersionTimeOrder"] = train_data["AppVersion"].map(argsort_dict) 
-    train_data[["AppVersionTimeOrder"]] = train_data[["AppVersionTimeOrder"]].apply(pd.to_numeric)
-
-    '''
-    print("TESTING APP VERSION TIME ORDER!!!")
-    print(train_data[['AppVersion', 'AppVersionTimeOrder']].head())
-
-    print("Order was: ")
-    print(appVersions)
-    input()
-    '''
-
-    return train_data
-
-def label_appVersion_count(trainData):
-    vc_item1 = train_data['AppVersion'].value_counts()
-
-    train_data['AppVersionCounts'] = train_data['AppVersion'].apply(lambda x: vc_item1[x])
-
-    return train_data;
-    
 if __name__ == "__main__":
     data_path = f'data{os.sep}'
     useSubset = False
@@ -195,142 +100,62 @@ if __name__ == "__main__":
     else:
         train_path = "train_subset.csv"
     test_path = data_path + 'test.csv'
+    unique_train_path = 'all_values_training.csv'
     
-    dtypes = {
-        'MachineIdentifier':                                    'category',
-        'ProductName':                                          'category',
-        'EngineVersion':                                        'category',
-        'AppVersion':                                           'category',
-        'AvSigVersion':                                         'category',
-        'IsBeta':                                               'int8',
-        'RtpStateBitfield':                                     'float16',
-        'IsSxsPassiveMode':                                     'int8',
-        'DefaultBrowsersIdentifier':                            'float16',
-        'AVProductStatesIdentifier':                            'float32',
-        'AVProductsInstalled':                                  'float16',
-        'AVProductsEnabled':                                    'float16',
-        'HasTpm':                                               'int8',
-        'CountryIdentifier':                                    'int32',
-        'CityIdentifier':                                       'float32',
-        'OrganizationIdentifier':                               'float16',
-        'GeoNameIdentifier':                                    'float32',
-        'LocaleEnglishNameIdentifier':                          'int32',
-        'Platform':                                             'category',
-        'Processor':                                            'category',
-        'OsVer':                                                'category',
-        'OsBuild':                                              'int16',
-        'OsSuite':                                              'int16',
-        'OsPlatformSubRelease':                                 'category',
-        'OsBuildLab':                                           'category',
-        'SkuEdition':                                           'category',
-        'IsProtected':                                          'float16',
-        'AutoSampleOptIn':                                      'int8',
-        'PuaMode':                                              'category',
-        'SMode':                                                'float16',
-        'IeVerIdentifier':                                      'float32',
-        'SmartScreen':                                          'category',
-        'Firewall':                                             'float16',
-        'UacLuaenable':                                         'float64',
-        'Census_MDC2FormFactor':                                'category',
-        'Census_DeviceFamily':                                  'category',
-        'Census_OEMNameIdentifier':                             'float32',
-        'Census_OEMModelIdentifier':                            'float32',
-        'Census_ProcessorCoreCount':                            'float16',
-        'Census_ProcessorManufacturerIdentifier':               'float16',
-        'Census_ProcessorModelIdentifier':                      'float32',
-        'Census_ProcessorClass':                                'category',
-        'Census_PrimaryDiskTotalCapacity':                      'float32',
-        'Census_PrimaryDiskTypeName':                           'category',
-        'Census_SystemVolumeTotalCapacity':                     'float32',
-        'Census_HasOpticalDiskDrive':                           'int8',
-        'Census_TotalPhysicalRAM':                              'float32',
-        'Census_ChassisTypeName':                               'category',
-        'Census_InternalPrimaryDiagonalDisplaySizeInInches':    'float32',
-        'Census_InternalPrimaryDisplayResolutionHorizontal':    'float32',
-        'Census_InternalPrimaryDisplayResolutionVertical':      'float32',
-        'Census_PowerPlatformRoleName':                         'category',
-        'Census_InternalBatteryType':                           'category',
-        'Census_InternalBatteryNumberOfCharges':                'float32',
-        'Census_OSVersion':                                     'category',
-        'Census_OSArchitecture':                                'category',
-        'Census_OSBranch':                                      'category',
-        'Census_OSBuildNumber':                                 'int32',
-        'Census_OSBuildRevision':                               'int32',
-        'Census_OSEdition':                                     'category',
-        'Census_OSSkuName':                                     'category',
-        'Census_OSInstallTypeName':                             'category',
-        'Census_OSInstallLanguageIdentifier':                   'float16',
-        'Census_OSUILocaleIdentifier':                          'int32',
-        'Census_OSWUAutoUpdateOptionsName':                     'category',
-        'Census_IsPortableOperatingSystem':                     'int8',
-        'Census_GenuineStateName':                              'category',
-        'Census_ActivationChannel':                             'category',
-        'Census_IsFlightingInternal':                           'float16',
-        'Census_IsFlightsDisabled':                             'float16',
-        'Census_FlightRing':                                    'category',
-        'Census_ThresholdOptIn':                                'float16',
-        'Census_FirmwareManufacturerIdentifier':                'float32',
-        'Census_FirmwareVersionIdentifier':                     'float32',
-        'Census_IsSecureBootEnabled':                           'int8',
-        'Census_IsWIMBootEnabled':                              'float16',
-        'Census_IsVirtualDevice':                               'float16',
-        'Census_IsTouchEnabled':                                'int8',
-        'Census_IsPenCapable':                                  'int8',
-        'Census_IsAlwaysOnAlwaysConnectedCapable':              'float16',
-        'Wdft_IsGamer':                                         'float16',
-        'Wdft_RegionIdentifier':                                'float32',
-        'HasDetections':                                        'int8'
-    }
-
+    dtypes = Transform.get_dtypes()
+    
+    #unique_train = pd.read_csv(unique_train_path, dtype=dtypes)
     train_data = pd.read_csv(train_path, nrows=100000, dtype=dtypes)
-    test_data = pd.read_csv(test_path, dtype=dtypes)    
-     
-    missing_columns = [
-        'DefaultBrowsersIdentifier',
-        'PuaMode',
-        'Census_ProcessorClass',
-        'Census_InternalBatteryType',
-        'Census_IsFlightingInternal',
-        'Census_ThresholdOptIn',
-        'Census_IsWIMBootEnabled',
-        'OsVer',
-        'EngineVersion'
-    ]
     
-    train_data = train_data.drop(missing_columns, axis=1)
-    test_data = test_data.drop(missing_columns, axis=1)
+    #train_data = train_data.append(unique_train)
+    #train_data = train_data.drop_duplicates()
+    
+    test_data = pd.read_csv(test_path, nrows=7853253, dtype=dtypes)    
     
     ytr = train_data["HasDetections"].to_numpy()
     
-    train_data = add_timestamp(test_data)
-    test_data = add_timestamp(test_data)
-
-    train_data = label_appVersion_time(train_data)
-    train_data = label_appVersion_count(train_data)
+    train_data = Transform.transform_dataframe(train_data)
+    test_data = Transform.transform_dataframe(test_data)
+    print('HERE')
     
-    test_data = label_appVersion_time(test_data)
-    test_data = label_appVersion_count(test_data)
+    test_chunks = Transform.split_dataframe(test_data)
     
-    #print(train_data['AppVersionTimeOrder'].dtype)
+    print(len(test_chunks))
     
-    train_data = transform_categorical(train_data)
-    test_data = transform_categorical(test_data)
-
-    #train_data = train_data.drop(columns="AvSigVersion")
-
-    X_labels = list(train_data.columns[1:])
+    for chunk in test_chunks:
+        print(chunk.shape)
+        
+    '''
+    train_data = Transform.transform_categorical(train_data)
+    test_data = Transform.transform_categorical(test_data)
     
-    X_labels.remove("AppVersion") 
-    #X_labels.remove("HasDetections")
+    train_data, test_data = Transform.make_matching(train_data, test_data)
     
-    Xtr = train_data[X_labels].to_numpy()
-    Xte = test_data[X_labels].to_numpy()
+    print(train_data.shape)
+    print(test_data.shape)
     
-
+    l1 = list(train_data.columns)
+    l2 = list(test_data.columns)
+    
+    diff = list(set(l1) - set(l2))
+    
+    print(diff)
+    print(len(diff))
+    
+    
+    train_data = train_data.drop(['HasDetections'], axis=1)
+    
+    
+    Xtr = train_data.to_numpy()
+    Xte = test_data.to_numpy()
+    
     Xtr = np.nan_to_num(Xtr)
     Xte = np.nan_to_num(Xte)
     
-    X_train, y_train, selection, model = perform_softmax(Xtr, ytr, X_labels, False)
+    labels = list(train_data.columns)
+    
+
+    selection, model = perform_softmax(Xtr, ytr, labels, False)
     
     #feature_importance(X_train, y_train, X_labels, selection)
     
@@ -349,4 +174,4 @@ if __name__ == "__main__":
     
     df.insert(1, "HasDetections", results)
     df.to_csv("submission.csv", index=False)
-    
+    '''

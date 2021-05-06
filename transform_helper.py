@@ -272,7 +272,7 @@ def transform_dataframe(df):
     df = label_appVersion_time(df) 
     df = label_appVersion_count(df)
     
-    df = df.drop(['MachineIdentifier'], axis=1)
+    #df = df.drop(['MachineIdentifier'], axis=1)
     
     return df
 

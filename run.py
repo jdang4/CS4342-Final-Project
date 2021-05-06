@@ -15,7 +15,7 @@ from functools import cmp_to_key
 import sys
 import math
 from sklearn import preprocessing
-import joblib
+import joblib, gc
 
 from sklearn import metrics
 import transform_helper as Transform 
@@ -122,19 +122,28 @@ if __name__ == "__main__":
     
     test_chunks = Transform.split_dataframe(test_data)
     
+    train_cols = list(train_data.columns)
+    
+    fake_train = train_data.head(3)
+    
+    del test_data, train_data
+    gc.collect()
+    
     print(len(test_chunks))
-
+    
+    #test_data = pd.DataFrame(columns=train_cols)
+    list_of_chunks = []
     print('Starting...\n')
     for chunk in test_chunks:
         chunk = Transform.transform_categorical(chunk)
         
-        chunk = Transform.make_matching(train_data, chunk)
-        chunk = Transform.add_missing_columns(train_data, chunk)
+        chunk = Transform.make_matching(fake_train, chunk)
+        chunk = Transform.add_missing_columns(fake_train, chunk)
         
-        print(train_data.shape)
+        print(fake_train.shape)
         print(chunk.shape)
         
-        l1 = list(train_data.columns)
+        l1 = list(fake_train.columns)
         l2 = list(chunk.columns)
     
         diff = list(set(l1) - set(l2))
@@ -142,7 +151,23 @@ if __name__ == "__main__":
         print(diff)
         print(len(diff))
         
+        print('Appending...')
+        list_of_chunks.append(chunk)  
+        
         print('\nNext\n')
+    
+    del test_chunks
+    gc.collect()
+    
+    l1 = list_of_chunks[16:]
+    
+    print('Starting first concat....')
+    #df = pd.concat(l1, axis=1)
+    print('Finished concat')
+    
+    l1.to_csv("test_submission.csv", mode='a', index=False, header=False)
+    
+    sys.exit(1)
         
         
         

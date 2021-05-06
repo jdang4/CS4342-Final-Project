@@ -159,13 +159,13 @@ if __name__ == "__main__":
     del test_chunks
     gc.collect()
     
-    l1 = list_of_chunks[16:]
-    
     print('Starting first concat....')
-    #df = pd.concat(l1, axis=1)
+    
+    df = pd.concat(list_of_chunks, axis=1)
+    
     print('Finished concat')
     
-    l1.to_csv("test_submission.csv", mode='a', index=False, header=False)
+    df.to_csv("test_submission.csv", index=False)
     
     sys.exit(1)
         

@@ -118,12 +118,33 @@ if __name__ == "__main__":
     test_data = Transform.transform_dataframe(test_data)
     print('HERE')
     
+    train_data = Transform.transform_categorical(train_data)
+    
     test_chunks = Transform.split_dataframe(test_data)
     
     print(len(test_chunks))
-    
+
+    print('Starting...\n')
     for chunk in test_chunks:
+        chunk = Transform.transform_categorical(chunk)
+        
+        chunk = Transform.make_matching(train_data, chunk)
+        chunk = Transform.add_missing_columns(train_data, chunk)
+        
+        print(train_data.shape)
         print(chunk.shape)
+        
+        l1 = list(train_data.columns)
+        l2 = list(chunk.columns)
+    
+        diff = list(set(l1) - set(l2))
+    
+        print(diff)
+        print(len(diff))
+        
+        print('\nNext\n')
+        
+        
         
     '''
     train_data = Transform.transform_categorical(train_data)

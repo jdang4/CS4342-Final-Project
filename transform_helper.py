@@ -150,7 +150,7 @@ def add_timestamp(df):
     
     return df
 
-def transform_categorical(df):
+def transform_categorical2(df):
     categorical_cols = get_categorical_cols()
     #numeric = df.select_dtypes(include=np.number).columns.tolist()
     #numeric_df = df[[numeric]]
@@ -168,6 +168,20 @@ def transform_categorical(df):
     # list_of_one_hots = [df, tmp_df]
     # new_df = pd.concat(list_of_one_hots, axis=1)
     # new_df = new_df.drop(categorical_cols, axis=1)
+    
+    return new_df
+
+
+def transform_categorical(df):
+    list_of_one_hots = [df]
+    cols = get_categorical_cols()
+    for category in cols:
+        tmp_df = pd.get_dummies(df[category], prefix=category)
+        list_of_one_hots.append(tmp_df)
+        #df.drop(category, axis=1)
+        
+    new_df = pd.concat(list_of_one_hots, axis=1)
+    new_df = new_df.drop(cols, axis=1)
     
     return new_df
 
@@ -217,7 +231,28 @@ def make_matching(train, test):
     test = test.drop(diff, axis=1)
     
     
-    return train, test
+    return test
+
+def get_missing_columns(train, test):
+    l1 = list(train.columns)
+    l2 = list(test.columns)
+    
+    diff = list(set(l1) - set(l2))
+    
+    return diff
+
+
+def add_missing_columns(train, test):
+    missing_cols = get_missing_columns(train, test)
+    
+    for col in missing_cols:
+        if col != 'HasDetections':
+            mean_val = train[[col]].mean() 
+            test[col] = mean_val
+            
+    return test 
+            
+    
 
 def transform_dataframe(df):
     missing_columns = [
@@ -241,7 +276,7 @@ def transform_dataframe(df):
     
     return df
 
-def split_dataframe(df, chunk_size = 1000000):
+def split_dataframe(df, chunk_size = 500000):
     chunks = list() 
     num_chunks = math.ceil(len(df) / chunk_size) 
     

@@ -93,14 +93,14 @@ def feature_importance(X, y, labels, selection):
     
     
 if __name__ == "__main__":
-    data_path = ""
+    data_path = f'data{os.sep}'
     useSubset = False
     train_path = ""
     if not useSubset:
         train_path = data_path + 'train.csv'
     else:
         train_path = "train_subset.csv"
-    test_path = data_path + 'test_submission.csv'
+    test_path = 'test_subset.csv'
     # unique_train_path = 'all_values_training.csv'
     
     dtypes = Transform.get_dtypes()
@@ -112,8 +112,8 @@ if __name__ == "__main__":
     #train_data = train_data.drop_duplicates()
 
     test_data = pd.read_csv(test_path, nrows=10000, dtype=dtypes, verbose=True)
-    test_data = test_data.drop(test_data.columns[0], axis=1)
-    test_data.to_csv("test_subset.csv", index=False)
+    #test_data = test_data.drop(test_data.columns[0], axis=1)
+    #test_data.to_csv("test_subset.csv", index=False)
     ytr = train_data["HasDetections"].to_numpy()
     
     train_data = Transform.transform_dataframe(train_data)
@@ -185,14 +185,13 @@ if __name__ == "__main__":
 #    train_data = Transform.transform_categorical(train_data)
     #test_data = Transform.transform_categorical(test_data)
     
-    #test_data = Transform.make_matching(train_data, test_data)
-    
+    test_data = Transform.make_matching(train_data, test_data)
 
     
     #test_data.fillna(0)
     train_data = train_data.drop(['HasDetections'], axis=1)
     train_data = train_data.drop(['MachineIdentifier'], axis=1)
-    test_data = Transform.remove_cols(test_data)
+    #test_data = Transform.remove_cols(test_data)
     test_data.replace(np.nan, 0)
     print(train_data.shape)
     print(test_data.shape)
@@ -207,12 +206,20 @@ if __name__ == "__main__":
     print(diff2)
     print(len(diff2))
     ident = test_data["MachineIdentifier"].to_numpy()
+    
+    df = test_data[['MachineIdentifier']].copy()
+    
     test_data = test_data.drop(["MachineIdentifier"], axis=1)
+    
     Xtr = train_data.to_numpy()
-    Xte = test_data.to_numpy()
-
+    Xte = test_data.to_numpy(dtype='float64')
+    
+    print(np.isnan(Xte))
+    
     Xtr = np.nan_to_num(Xtr)
     Xte = np.nan_to_num(Xte)
+    
+    
     
     labels = list(train_data.columns)
     
@@ -224,9 +231,9 @@ if __name__ == "__main__":
 
 #    Xte = selection.transform(Xte)
     #(np.all(np.isfinite(Xte)))
-    print(Xte)
-    print(Xte.dtype)
-    print(np.isnan(Xte).any())
+    #print(Xte)
+    #print(Xte.dtype)
+    #print(np.isnan(Xte).any())
     Xte = preprocessing.StandardScaler().fit_transform(Xte)
 
     yte = model.predict_proba(Xte)
@@ -235,9 +242,8 @@ if __name__ == "__main__":
     results = yte[:,1]
 
     # Creating the template for submission to Kaggle
-    df = test_data.copy()
-    columns_to_drop = [i for i in range(1, len(test_data.columns), 1)]
-    df.drop(df.columns[columns_to_drop], axis=1, inplace=True)
+    #columns_to_drop = [i for i in range(1, len(test_data.columns), 1)]
+    #df.drop(df.columns[columns_to_drop], axis=1, inplace=True)
     
     df.insert(1, "HasDetections", results)
     df.to_csv("submission.csv", index=False)

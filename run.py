@@ -110,9 +110,10 @@ if __name__ == "__main__":
     train_data = pd.read_csv(train_path, nrows=10000, dtype=dtypes, verbose=True)
     #train_data = train_data.append(unique_train)
     #train_data = train_data.drop_duplicates()
-    
+
     test_data = pd.read_csv(test_path, nrows=10000, dtype=dtypes, verbose=True)
-    
+    test_data = test_data.drop(test_data.columns[0], axis=1)
+    test_data.to_csv("test_subset.csv", index=False)
     ytr = train_data["HasDetections"].to_numpy()
     
     train_data = Transform.transform_dataframe(train_data)
@@ -223,10 +224,13 @@ if __name__ == "__main__":
 
 #    Xte = selection.transform(Xte)
     #(np.all(np.isfinite(Xte)))
+    print(Xte)
+    print(Xte.dtype)
+    print(np.isnan(Xte).any())
     Xte = preprocessing.StandardScaler().fit_transform(Xte)
 
     yte = model.predict_proba(Xte)
-    
+
 
     results = yte[:,1]
 

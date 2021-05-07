@@ -10,6 +10,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, BatchNormalization, Activation
 from keras.optimizers import Adam
+import tensorflow as tf
 
 import transform_helper as Transform 
 
@@ -42,9 +43,9 @@ def neural_network(X, y):
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Dense(1, activation='sigmoid'))
-    model.compile(optimizer=Adam(lr=0.01), loss="binary_crossentropy", metrics=["accuracy"])
+    model.compile(optimizer=Adam(lr=0.01), loss="binary_crossentropy", metrics=[tf.keras.metrics.AUC()])
     
-    model.fit(X_train, y_train, epochs=150, batch_size=10)
+    model.fit(X_train, y_train, epochs=150, batch_size=10, validation_data = (X_test, y_test))
 
 if __name__ == "__main__":
     data_path = f'data{os.sep}'
@@ -71,6 +72,7 @@ if __name__ == "__main__":
     train_data = Transform.transform_categorical(train_data)
     
     train_data = train_data.drop(['MachineIdentifier'], axis=1)
+    train_data = train_data.drop(['HasDetections'], axis=1)
     
     Xtr = train_data.to_numpy()
     

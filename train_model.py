@@ -16,14 +16,14 @@ import transform_helper as Transform
 from Model import Model
 
 
-def repeat_softmax(X, y, preBuilt=False, selector=None, model=None):
+def repeat_softmax(X, y, preBuilt=False, model=None):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=1)
     
-    if not preBuilt:
-        trees = ExtraTreesClassifier(random_state=1)
-        trees.fit(X_train, y_train)
-        selector = SelectFromModel(trees, prefit=True, threshold=-np.inf)
+    trees = ExtraTreesClassifier(random_state=1)
+    trees.fit(X_train, y_train)
+    selector = SelectFromModel(trees, prefit=True, threshold=-np.inf)
         
+    if not preBuilt:
         model = LogisticRegression(C=0.040980805223454236, tol=0.0037189066625450827, penalty='l2', max_iter=100,
                                solver='newton-cg', warm_start=True)
         
@@ -45,25 +45,25 @@ def repeat_softmax(X, y, preBuilt=False, selector=None, model=None):
     
     print(f"AUC Score: {score}\n")
 
-    return selector, model
+    return model
 
 
 if __name__ == "__main__":
     
-    MODEL_NUM = 1 # 1 - softmax, 2 - neural network
-    TRAIN_CHUNKS = 2
+    MODEL_NUM = 1       # 1 - softmax, 2 - neural network
+    TRAIN_CHUNKS = 1    # 0 - False, 2 - True
+    
     model_dict = {
         1: 'softmax',
         2: 'neural_network'
     }
     
-    if len(sys.argv) == 1:
-        MODEL_NUM = int(sys.argv[1])
-        
-    elif len(sys.argv) == 2:
+    if len(sys.argv) > 2:
         MODEL_NUM = int(sys.argv[1])
         TRAIN_CHUNKS = int(sys.argv[2])
         
+    elif len(sys.argv) > 1:
+        MODEL_NUM = int(sys.argv[1])
         
     data_path = f'data{os.sep}'
     useSubset = False
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     selection = None
     model = None
     
-    if TRAIN_CHUNKS == 2:
+    if TRAIN_CHUNKS == 1:
         Xtr = train_data.to_numpy(dtype='float64')
         Xtr = np.nan_to_num(Xtr)
         
@@ -115,10 +115,10 @@ if __name__ == "__main__":
         
         for i,chunk in enumerate(train_chunks):
             print(f'Chunk #{i}')
-            Xtr = chunk.to_numpy()
+            Xtr = chunk.to_numpy(dtype='float64')
             Xtr = np.nan_to_num(Xtr)
             
-            selection, model = repeat_softmax(Xtr, ytr_chunks[i], i > 0, selection, model)
+            model = repeat_softmax(Xtr, ytr_chunks[i], i > 0, model)
             
             
     else:

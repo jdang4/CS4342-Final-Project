@@ -250,9 +250,39 @@ def add_missing_columns(train, test):
             mean_val = train[[col]].mean() 
             test[col] = mean_val
             
-    return test 
-            
-    
+    return test
+
+
+def remove_cols(df):
+    missing_columns = [
+        'Census_ChassisTypeName_35',
+        'Census_ChassisTypeName_IoTGateway',
+        'Census_OSBranch_rs5_release_edge',
+        'Census_PowerPlatformRoleName_PerformanceServer',
+        'Census_OSSkuName_SB_SOLUTION_SERVER',
+        'Census_OSBranch_rs5_release_sigma',
+        'Census_OSEdition_ProfessionalEducationN',
+        'Unnamed: 0',
+        'Census_OSEdition_ServerDatacenterEval',
+        'SmartScreen_&#x01;',
+        'SmartScreen_on',
+        'Census_MDC2FormFactor_ServerOther',
+        'Census_OSSkuName_ENTERPRISE_N',
+        'Census_ChassisTypeName_82',
+        'Census_ChassisTypeName_0',
+        'Census_ChassisTypeName_Blade',
+        'Census_OSEdition_ServerSolution',
+        'SmartScreen_&#x02;',
+        'Census_ChassisTypeName_36',
+        'Census_ChassisTypeName_BusExpansionChassis',
+        'Census_OSEdition_EnterpriseN',
+        'Census_OSSkuName_DATACENTER_EVALUATION_SERVER'
+    ]
+    df = df.drop(missing_columns, axis=1)
+
+    # df = df.drop(['MachineIdentifier'], axis=1)
+
+    return df
 
 def transform_dataframe(df):
     missing_columns = [
@@ -266,8 +296,10 @@ def transform_dataframe(df):
         'OsVer',
         'EngineVersion'
     ]
-    
-    df = df.drop(missing_columns, axis=1)
+    try:
+        df = df.drop(missing_columns, axis=1)
+    except:
+        return df
     df = add_timestamp(df)
     df = label_appVersion_time(df) 
     df = label_appVersion_count(df)

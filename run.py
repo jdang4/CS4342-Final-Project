@@ -27,6 +27,47 @@ NUM_FEATURES = 5
 if len(sys.argv) > 1:
     NUM_FEATURES = int(sys.argv[1])
 
+
+def repeat_softmax(X, y, preBuilt=False, selector=None, model=None):
+
+    if not preBuilt:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=1)
+        trees = ExtraTreesClassifier(random_state=1)
+        trees.fit(X_train, y_train)
+
+        selector = SelectFromModel(trees, prefit=True, threshold=-np.inf)
+        print(X.shape)
+    else:
+        X_train = X
+        y_train = y
+    # NEW X_TRAIN FROM SELECTED FEATURES:
+    X_train = selector.transform(X_train)
+
+    # standardize data
+    X_train = preprocessing.StandardScaler().fit_transform(X_train)
+    #X_test = preprocessing.StandardScaler().fit_transform(X_test)
+
+    print(X_train.shape)
+    # {'C': 0.040980805223454236, 'tol': 0.0037189066625450827, 'max_iter': 61, 'solver': 'newton-cg', 'penalty': 'l2'}
+    if not preBuilt:
+        model = LogisticRegression(C=10, tol=0.0037189066625450827, penalty='l2', max_iter=100,
+                               solver='newton-cg', warm_start=True)
+    model.fit(X_train, y_train)
+    #yhat = model.predict_proba(X_test)
+
+    # print(yhat)
+    # yhat = yhat[:, 1]
+
+    #score = metrics.roc_auc_score(y_test, yhat, average=None)
+
+    #print(f"\nAUC Score: {score}\n")
+
+    # if plot:
+    #     metrics.plot_roc_curve(model, X_test, y_test)
+    #     plt.show()
+
+    return selector, model
+
 def perform_softmax(X, y, labels, train=True, plot=False):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=1)
 
@@ -93,28 +134,26 @@ def feature_importance(X, y, labels, selection):
     
     
 if __name__ == "__main__":
-    data_path = f'data{os.sep}'
+    data_path = ""
     useSubset = False
     train_path = ""
     if not useSubset:
         train_path = data_path + 'train.csv'
     else:
         train_path = "train_subset.csv"
-    test_path = 'test_subset.csv'
+    test_path = 'test_submission.csv'
     # unique_train_path = 'all_values_training.csv'
     
     dtypes = Transform.get_dtypes()
-    
-    #unique_train = pd.read_csv(unique_train_path, dtype=dtypes)
-    #train_data = pd.read_csv(train_path, nrows=8921483, dtype=dtypes, verbose=True)
-    train_data = pd.read_csv(train_path, nrows=10000, dtype=dtypes, verbose=True)
-    #train_data = train_data.append(unique_train)
-    #train_data = train_data.drop_duplicates()
 
-    test_data = pd.read_csv(test_path, nrows=10000, dtype=dtypes, verbose=True)
-    #test_data = test_data.drop(test_data.columns[0], axis=1)
-    #test_data.to_csv("test_subset.csv", index=False)
-    ytr = train_data["HasDetections"].to_numpy()
+    train_data = pd.read_csv(train_path, nrows=500000, dtype=dtypes)
+    test_data = pd.read_csv(test_path, dtype=dtypes)
+
+    # train_data = pd.read_csv(train_path, nrows=100, dtype=dtypes)
+    # test_data = pd.read_csv(test_path, nrows = 50, dtype=dtypes)
+
+
+    ytr = train_data["HasDetections"]#.to_numpy()
     
     train_data = Transform.transform_dataframe(train_data)
     test_data = Transform.transform_dataframe(test_data)
@@ -186,11 +225,12 @@ if __name__ == "__main__":
     #test_data = Transform.transform_categorical(test_data)
     
     test_data = Transform.make_matching(train_data, test_data)
-
-    
-    #test_data.fillna(0)
     train_data = train_data.drop(['HasDetections'], axis=1)
     train_data = train_data.drop(['MachineIdentifier'], axis=1)
+    test_data = Transform.add_missing_columns(train_data, test_data)
+    
+    #test_data.fillna(0)
+
     #test_data = Transform.remove_cols(test_data)
     test_data.replace(np.nan, 0)
     print(train_data.shape)
@@ -211,20 +251,32 @@ if __name__ == "__main__":
     
     test_data = test_data.drop(["MachineIdentifier"], axis=1)
     
-    Xtr = train_data.to_numpy()
+
     Xte = test_data.to_numpy(dtype='float64')
     
-    print(np.isnan(Xte))
+    #print(np.isnan(Xte))
     
-    Xtr = np.nan_to_num(Xtr)
+
     Xte = np.nan_to_num(Xte)
     
     
     
     labels = list(train_data.columns)
-    
+    # makeMatching
+    # addMissingColumns
+    train_chunks = Transform.split_dataframe(train_data, chunk_size=100000)  # 100000
+    ytr_chunks = Transform.split_dataframe(ytr, chunk_size=100000)
+    list_of_chunks = []
+    selection = None
+    model = None
+    for i,chunk in enumerate(train_chunks):
+        #list_of_chunks.append(chunk)
+        Xtr = chunk.to_numpy()
+        Xtr = np.nan_to_num(Xtr)
+        selection, model = repeat_softmax(Xtr, ytr_chunks[i], i > 0, selection, model)
 
-    selection, model = perform_softmax(Xtr, ytr, labels, False)
+        print('\nNext\n')
+    #selection, model = perform_softmax(Xtr, ytr, labels, False)
     
     #feature_importance(X_train, y_train, X_labels, selection)
     print(test_data.head())
@@ -240,10 +292,50 @@ if __name__ == "__main__":
 
 
     results = yte[:,1]
+    #df = df.insert(1, "MachineIdentifier", ident)
+    #df = df.insert(1, "HasDetections", results)
+    frame = {'MachineIdentifier': ident, 'HasDetections': results}
+
+    results = pd.DataFrame(frame)
+    print(results)
+
+    print("a")
+    test_chunks = Transform.split_dataframe(results, chunk_size=100000) #100000
+    list_of_chunks = []
+    for chunk in test_chunks:
+        # chunk = Transform.transform_categorical(chunk)
+        #
+        # chunk = Transform.make_matching(fake_train, chunk)
+        # chunk = Transform.add_missing_columns(fake_train, chunk)
+
+        # print(fake_train.shape)
+        # print(chunk.shape)
+        #
+        # l1 = list(fake_train.columns)
+        # l2 = list(chunk.columns)
+        #
+        # diff = list(set(l1) - set(l2))
+        #
+        # print(diff)
+        # print(len(diff))
+        #
+        # print('Appending...')
+        list_of_chunks.append(chunk)
+
+        print('\nNext\n')
+    with open("submission_fin_5.csv", 'a') as f:
+
+        for i,chunk in enumerate(test_chunks):
+            print(chunk)
+            if i == 0:
+                pd.DataFrame(chunk).to_csv(f, header=True, index=False)
+            else:
+                pd.DataFrame(chunk).to_csv(f, header=False, index=False)
+            #print(i)
 
     # Creating the template for submission to Kaggle
     #columns_to_drop = [i for i in range(1, len(test_data.columns), 1)]
     #df.drop(df.columns[columns_to_drop], axis=1, inplace=True)
     
-    df.insert(1, "HasDetections", results)
-    df.to_csv("submission.csv", index=False)
+
+    #df.to_csv("submission.csv", index=False)

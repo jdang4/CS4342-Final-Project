@@ -43,7 +43,7 @@ if __name__ == "__main__":
     print(f'Total Number of Chunks: {num_of_chunks}\n')
     
     list_of_chunks = []
-    print('One-Hot Encoding All Chunks...\n')
+    print('One-Hot Encoding All Chunks...')
     for chunk in test_chunks:
         chunk = Transform.transform_categorical(chunk)
     
@@ -70,22 +70,18 @@ if __name__ == "__main__":
     print('Done\n')
     
     f = open('test_submission2.csv', "w")
+    f.write('')
     f.close() 
-        
+    
     print('Writing to file....')
     with open("test_submission2.csv", 'a') as f:
     
         for i,chunk in enumerate(list_of_chunks):
             print(f'Chunk #{i}')
             if i == 0:
-                chunk.to_csv(f, header=True)
+                chunk.to_csv(f, header=True, index=False)
             else:
-                chunk.to_csv(f, header=False)
-            
-            
+                chunk.to_csv(f, header=False, index=False)
 
-    df = pd.concat(list_of_chunks, axis=1)
     
     print('Done\n')
-    
-    df.to_csv("test_submission2.csv", index=False)

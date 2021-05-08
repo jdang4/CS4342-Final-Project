@@ -16,17 +16,17 @@ if __name__ == "__main__":
     useSubset = False
     test_path = ""
     
-    test_path = "test_submission.csv"
+    test_path = "test_submission2.csv"
     
     print('Reading from csv...')
     
-    test_data = pd.read_csv(test_path, dtype='float64')
+    test_data = pd.read_csv(test_path)
     
     df = test_data[['MachineIdentifier']].copy()
     
     test_data = test_data.drop(["MachineIdentifier"], axis=1)
     
-    print('Done\n')
+    print('Done')
     
     Xte = test_data.to_numpy(dtype='float64')
     Xte = np.nan_to_num(Xte)

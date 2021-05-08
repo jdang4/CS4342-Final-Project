@@ -8,10 +8,18 @@ import sys, math, joblib, gc
 from sklearn import preprocessing
 
 from sklearn import metrics
+from tensorflow import keras
+
 import transform_helper as Transform 
+
+import pickle
 
 
 if __name__ == "__main__":    
+    f = open('model_num.pckl', 'rb')
+    MODEL_NUM = pickle.load(f)
+    f.close()
+    
     data_path = f'data{os.sep}'
     useSubset = False
     test_path = ""
@@ -32,14 +40,21 @@ if __name__ == "__main__":
     Xte = np.nan_to_num(Xte)
     
     # load the model from disk
-    model = joblib.load('model.sav')
+    model = None 
+    if MODEL_NUM == 2:
+        model = keras.models.load_model('model')
+    
+    else:
+        model = joblib.load('model.sav')
+    
+    model = keras.models.load_model('model')
     
     # normalize testing data
     Xte = preprocessing.StandardScaler().fit_transform(Xte)
     
     yte = model.predict_proba(Xte)
-
-    results = yte[:,1]
+    
+    results = yte[:,1] if MODEL_NUM == 1 else yte
     
     df.insert(1, "HasDetections", results)
     df.to_csv("submission.csv", index=False)

@@ -23,19 +23,17 @@ if __name__ == "__main__":
     
     print('Reading from csv...')
     
-    train_data = pd.read_csv(train_path, nrows=10, dtype=dtypes)
+    train_data = pd.read_csv(train_path, dtype=dtypes)
     #test_data = pd.read_csv(test_path, nrows=7853253, dtype=dtypes)
     test_data = pd.read_csv(test_path, nrows=1000, dtype=dtypes)
     
-    test_data = Transform.transform_dataframe(test_data) 
+    test_data = Transform.transform_dataframe(test_data)
     
     test_chunks = Transform.split_dataframe(test_data, chunk_size=100)
     
     train_cols = list(train_data.columns)
     
-    fake_train = train_data.head(3)
-    
-    del test_data, train_data
+    del test_data
     gc.collect()
     
     # print(len(test_chunks))
@@ -47,8 +45,8 @@ if __name__ == "__main__":
     for chunk in test_chunks:
         chunk = Transform.transform_categorical(chunk)
     
-        chunk = Transform.make_matching(fake_train, chunk)
-        chunk = Transform.add_missing_columns(fake_train, chunk)
+        chunk = Transform.make_matching(train_data, chunk)
+        chunk = Transform.add_missing_columns(train_data, chunk)
     
         # print(fake_train.shape)
         # print(chunk.shape)

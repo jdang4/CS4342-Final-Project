@@ -89,6 +89,10 @@ def neural_network(X, y):
     print("num_hidden: " + str(best_hyperparameters.x[2]))
     print("activation: " + str(best_hyperparameters.x[3]))
 
+    model = build_model(cols, best_hyperparameters.x[0], best_hyperparameters.x[1], best_hyperparameters.x[2], best_hyperparameters.x[3])
+    model.fit(X_train, y_train, epochs=25, batch_size=10, validation_data = (X_test, y_test))
+    model.save("deep_model")
+
     '''
     model = Sequential()
     model.add(Dense(100,input_dim=cols))

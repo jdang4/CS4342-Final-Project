@@ -19,10 +19,10 @@ from skopt import gp_minimize
 
 from sklearn.metrics import roc_auc_score
 
-space = [Real(1**-5, 3, "log-uniform", name="learning_rate"),
+space = [Real(0.00001, 0.01, "log-uniform", name="learning_rate"),
          Integer(1, 150, name="num_neurons"),
          Integer(1, 5, name="num_hidden"),
-         Categorical(['relu', 'sigmoid'], name="activation")
+         Categorical(['relu'], name="activation")
         ]
 
 #Creates a keras model.
@@ -33,7 +33,12 @@ num_hidden: the number of hidden layers.
 activation: the activation function used by this model
 """
 def build_model(input_dim, learning_rate, num_neurons, num_hidden, activation):
-
+    
+    print(learning_rate)
+    print(num_neurons)
+    print(num_hidden)
+    print(activation)
+    print()
     model = Sequential()
     model.add(Dense(num_neurons, input_dim=input_dim, activation=activation))
     model.add(BatchNormalization())
@@ -73,14 +78,13 @@ def neural_network(X, y):
         nn.fit(X_train, y_train, epochs=25, batch_size=10, validation_data = (X_test, y_test))
 
         yhat = nn.predict_proba(X_test)
-        yhat = yhat[:, 1]
 
         score = metrics.roc_auc_score(y_test, yhat, average=None)
 
         #skopt is minimizing this.
         #so we return -score so that higher scores have lower return values
         return -score
-
+    
     best_hyperparameters = gp_minimize(objective, space, n_calls=50, random_state=1)
     
     print("Best score: " + str(-best_hyperparameters.fun))
@@ -94,7 +98,6 @@ def neural_network(X, y):
     model.save("deep_model")
 
     yhat = nn.predict_proba(X_test)
-    yhat = yhat[:, 1]
 
     score = metrics.roc_auc_score(y_test, yhat, average=None)
     print("Score of optimized model: " + str(score))

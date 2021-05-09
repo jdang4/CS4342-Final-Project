@@ -93,6 +93,13 @@ def neural_network(X, y):
     model.fit(X_train, y_train, epochs=25, batch_size=10, validation_data = (X_test, y_test))
     model.save("deep_model")
 
+    yhat = nn.predict_proba(X_test)
+    yhat = yhat[:, 1]
+
+    score = metrics.roc_auc_score(y_test, yhat, average=None)
+    print("Score of optimized model: " + str(score))
+
+
     '''
     model = Sequential()
     model.add(Dense(100,input_dim=cols))

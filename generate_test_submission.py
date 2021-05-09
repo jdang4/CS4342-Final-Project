@@ -48,17 +48,6 @@ if __name__ == "__main__":
         chunk = Transform.make_matching(train_data, chunk)
         chunk = Transform.add_missing_columns(train_data, chunk)
     
-        # print(fake_train.shape)
-        # print(chunk.shape)
-    
-        # l1 = list(fake_train.columns)
-        # l2 = list(chunk.columns)
-    
-        # diff = list(set(l1) - set(l2))
-    
-        # print(diff)
-        # print(len(diff))
-    
         list_of_chunks.append(chunk)
     
     

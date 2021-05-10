@@ -1,21 +1,18 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
+import numpy as np
+import tensorflow as tf
+from keras.layers import Dense, Dropout, BatchNormalization, Activation
+from keras.models import Sequential
+from keras.optimizers import Adam
+from sklearn import metrics
+from sklearn import preprocessing
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.feature_selection import SelectFromModel
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.feature_selection import SelectFromModel
-from sklearn.ensemble import ExtraTreesClassifier
-from matplotlib import pyplot
-import sys, math, joblib, gc
-from sklearn import preprocessing
 
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, BatchNormalization, Activation
-from keras.optimizers import Adam
-import tensorflow as tf
+import transform_helper as Transform
 
-from sklearn import metrics
-import transform_helper as Transform 
 
 class Model:
     def __init__(self, X, y, labels, model_num=1):

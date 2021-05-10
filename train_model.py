@@ -65,7 +65,7 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1:
         MODEL_NUM = int(sys.argv[1])
         
-    data_path = f'data{os.sep}'
+    data_path = ""
     useSubset = False
     train_path = ""
     
@@ -78,14 +78,13 @@ if __name__ == "__main__":
     
     print('Reading from csv...')
     
-    train_data = pd.read_csv(train_path, nrows=500000, dtype=dtypes)
+    train_data = pd.read_csv(train_path, dtype=dtypes)
     
     print('Done\n')
 
     ytr = train_data["HasDetections"].to_numpy()
     
     print('Transforming Dataframe...')
-    
     train_data = Transform.transform_dataframe(train_data)
     
     train_data = Transform.transform_categorical(train_data)    # perform one-hot encoding on categorical columns

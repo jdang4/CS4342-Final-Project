@@ -15,7 +15,7 @@ from sklearn import metrics
 import transform_helper as Transform 
 
 if __name__ == "__main__":
-    data_path = f'data{os.sep}'
+    data_path = ""
     train_path = "final_train.csv"
     test_path = data_path + "test.csv"
     
@@ -25,11 +25,11 @@ if __name__ == "__main__":
     
     train_data = pd.read_csv(train_path, dtype=dtypes)
     #test_data = pd.read_csv(test_path, nrows=7853253, dtype=dtypes)
-    test_data = pd.read_csv(test_path, nrows=1000, dtype=dtypes)
+    test_data = pd.read_csv(test_path, dtype=dtypes)
     
     test_data = Transform.transform_dataframe(test_data)
     
-    test_chunks = Transform.split_dataframe(test_data, chunk_size=100)
+    test_chunks = Transform.split_dataframe(test_data, chunk_size=100000)
     
     train_cols = list(train_data.columns)
     

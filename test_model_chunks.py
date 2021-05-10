@@ -82,6 +82,9 @@ if __name__ == "__main__":
 
         Xte = test_data.to_numpy(dtype='float64')
         Xte = np.nan_to_num(Xte)
+
+        del test_data
+        gc.collect()
     
         # normalize testing data
         Xte = preprocessing.StandardScaler().fit_transform(Xte)
@@ -89,6 +92,9 @@ if __name__ == "__main__":
         yte = model.predict_proba(Xte)
     
         results = yte[:,1] if MODEL_NUM == 1 else yte
+
+        del Xte
+        gc.collect()
 
         df.insert(1, "HasDetections", results)
         

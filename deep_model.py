@@ -20,7 +20,7 @@ from skopt import gp_minimize
 from sklearn.metrics import roc_auc_score
 
 space = [Real(0.00001, 0.01, "log-uniform", name="learning_rate"),
-         Integer(1, 150, name="num_neurons"),
+         Integer(100, 150, name="num_neurons"),
          Integer(1, 5, name="num_hidden"),
          Categorical(['relu'], name="activation")
         ]
@@ -34,11 +34,11 @@ activation: the activation function used by this model
 """
 def build_model(input_dim, learning_rate, num_neurons, num_hidden, activation):
     
-    print(learning_rate)
-    print(num_neurons)
-    print(num_hidden)
-    print(activation)
-    print()
+    # print(learning_rate)
+    # print(num_neurons)
+    # print(num_hidden)
+    # print(activation)
+    # print()
     model = Sequential()
     model.add(Dense(num_neurons, input_dim=input_dim, activation=activation))
     model.add(BatchNormalization())
@@ -79,7 +79,7 @@ def neural_network(X, y):
 
         yhat = nn.predict_proba(X_test)
 
-        score = metrics.roc_auc_score(y_test, yhat, average=None)
+        score = roc_auc_score(y_test, yhat, average=None)
 
         #skopt is minimizing this.
         #so we return -score so that higher scores have lower return values
@@ -94,30 +94,13 @@ def neural_network(X, y):
     print("activation: " + str(best_hyperparameters.x[3]))
 
     model = build_model(cols, best_hyperparameters.x[0], best_hyperparameters.x[1], best_hyperparameters.x[2], best_hyperparameters.x[3])
-    model.fit(X_train, y_train, epochs=25, batch_size=10, validation_data = (X_test, y_test))
+    model.fit(X_train, y_train, epochs=25, batch_size=50, validation_data = (X_test, y_test))
     model.save("deep_model")
 
-    yhat = nn.predict_proba(X_test)
+    yhat = model.predict_proba(X_test)
 
-    score = metrics.roc_auc_score(y_test, yhat, average=None)
-    print("Score of optimized model: " + str(score))
-
-
-    '''
-    model = Sequential()
-    model.add(Dense(100,input_dim=cols))
-    model.add(Dropout(0.4))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dense(100))
-    model.add(Dropout(0.4))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dense(1, activation='sigmoid'))
-    model.compile(optimizer=Adam(lr=0.01), loss="binary_crossentropy", metrics=[tf.keras.metrics.AUC()])
-    
-    model.fit(X_train, y_train, epochs=150, batch_size=10, validation_data = (X_test, y_test))
-    '''
+    score = roc_auc_score(y_test, yhat, average=None)
+    print("\nScore of optimized model: " + str(score) + '\n')
 
 
 if __name__ == "__main__":
@@ -139,8 +122,6 @@ if __name__ == "__main__":
     ytr = train_data["HasDetections"].to_numpy()
     
     train_data = Transform.transform_dataframe(train_data)
-    #test_data = Transform.transform_dataframe(test_data)
-    print('HERE')
     
     train_data = Transform.transform_categorical(train_data)
     

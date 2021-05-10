@@ -121,7 +121,13 @@ class Model:
         model.add(Dense(1, activation='sigmoid'))
         model.compile(optimizer=Adam(lr=0.01), loss="binary_crossentropy", metrics=[tf.keras.metrics.AUC()])
     
-        model.fit(X_train, y_train, epochs=5, batch_size=10, validation_data = (X_test, y_test))
+        model.fit(X_train, y_train, epochs=25, batch_size=10, validation_data = (X_test, y_test))
+        
+        yhat = model.predict_proba(X_test)
+        
+        score = metrics.roc_auc_score(y_test, yhat, average=None)
+        
+        print(f"\nAUC Score: {score}\n")
         
         return selector, model
         

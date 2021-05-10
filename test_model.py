@@ -9,6 +9,7 @@ from sklearn import preprocessing
 
 from sklearn import metrics
 from tensorflow import keras
+from keras.models import model_from_json
 
 import transform_helper as Transform 
 
@@ -42,12 +43,14 @@ if __name__ == "__main__":
     # load the model from disk
     model = None 
     if MODEL_NUM == 2:
-        model = keras.models.load_model('model')
+        json_file = open('model.json', 'r')
+        json_model = json_file.read()
+        json_file.close()
+        model = model_from_json(json_model)
+        model.load_weights('model.h5')
     
     else:
         model = joblib.load('model.sav')
-    
-    model = keras.models.load_model('model')
     
     # normalize testing data
     Xte = preprocessing.StandardScaler().fit_transform(Xte)

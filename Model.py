@@ -130,5 +130,5 @@ class Model:
         print(f"\nAUC Score: {score}\n")
         
         return selector, model
-        
+
         

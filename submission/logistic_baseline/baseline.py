@@ -6,7 +6,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
-import pickle
+import pickle, joblib
 
 def perform_softmax(X, y):
     # do some randomization on ytr
@@ -21,11 +21,6 @@ def perform_softmax(X, y):
     
     print(f"\nAUC Score: {score}\n")
     
-    #metrics.plot_roc_curve(sm, X_test, y_test)
-    #plt.show()
-    f = open('baseline.pckl', 'wb')
-    pickle.dump(sm, f)
-    f.close()
     print("Model saved")
     
     
@@ -134,4 +129,7 @@ if __name__ == "__main__":
     Xtr = np.nan_to_num(Xtr)
     ytr = np.nan_to_num(ytr)
     
-    perform_softmax(Xtr, ytr)
+    model = perform_softmax(Xtr, ytr)
+
+    filename = 'model_baseline.sav'
+    joblib.dump(model, filename)

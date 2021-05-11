@@ -11,7 +11,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 from matplotlib import pyplot
 from datetime import datetime
 from functools import cmp_to_key
-import pickle
+import pickle, joblib
 
 from sklearn import metrics
 
@@ -37,7 +37,7 @@ def perform_softmax(X, y, labels, plot=False):
     f.close()
     print("Model saved")
 
-    return X_train, y_train
+    return model
 
 
 def to_integer(dt_time):
@@ -69,9 +69,9 @@ def convert(x):
 
 
 def add_timestamp(train_data):
-    os_times = np.load("../OSVersionTimestamps.npy", allow_pickle=True).item()
+    os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
 
-    datedictAS = np.load('../AvSigVersionTimestamps.npy', allow_pickle=True)[()]
+    datedictAS = np.load('AvSigVersionTimestamps.npy', allow_pickle=True)[()]
 
     for k, v in os_times.items():
         os_times[k] = v.timestamp()
@@ -146,7 +146,7 @@ def label_appVersion_count(trainData):
 
 if __name__ == "__main__":
     data_path = f'data{os.sep}'
-    useSubset = True
+    useSubset = False
     train_path = ""
     if not useSubset:
         train_path = data_path + 'train.csv'
@@ -273,6 +273,7 @@ if __name__ == "__main__":
 
     Xtr = np.nan_to_num(Xtr)
 
-    X_train, y_train = perform_softmax(Xtr, ytr, X_labels, False)
+    model = perform_softmax(Xtr, ytr, X_labels, False)
 
-    feature_importance(X_train, y_train, X_labels)
+    filename = 'model_baseline_mapping.sav'
+    joblib.dump(model, filename)

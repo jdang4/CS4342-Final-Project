@@ -103,7 +103,7 @@ def evaluate_model(X, y, model, nn):
 if __name__ == "__main__":
 	
 	MODEL_NUM = 1       # 1 - softmax, 2 - neural network
-	TRAIN_CHUNKS = 1    # 0 - False, 1 - True
+	TRAIN_CHUNKS = 0    # 0 - False, 1 - True
 	
 	model_dict = {
 		1: 'softmax',
@@ -130,7 +130,7 @@ if __name__ == "__main__":
 	
 	print('Reading from csv...')
 	
-	train_data = pd.read_csv(train_path, nrows=100000, dtype=dtypes)
+	train_data = pd.read_csv(train_path, nrows=1000, dtype=dtypes)
 	
 	print('Done\n')
 
@@ -213,14 +213,14 @@ if __name__ == "__main__":
 	if MODEL_NUM == 2:
 		model_json = model.to_json()
 	
-		with open('model.json', 'w') as json_file:
+		with open(f'saved_models{os.sep}model.json', 'w') as json_file:
 			json_file.write(model_json)
 
 		# serialize the weights
-		model.save_weights('model.h5')
+		model.save_weights(f'saved_models{os.sep}model.h5')
 		
 	else:
-		filename = 'model.sav'
+		filename = f'saved_models{os.sep}model.sav'
 		joblib.dump(model, filename)
 	
 	f = open('model_num.pckl', 'wb')

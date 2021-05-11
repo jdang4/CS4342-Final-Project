@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 from functools import cmp_to_key
 from sklearn.preprocessing import OneHotEncoder
-import sys
+import os
 import math
 from sklearn import preprocessing
 from sklearn.preprocessing import LabelBinarizer
@@ -131,9 +131,9 @@ def convert(x):
 
   
 def add_timestamp(df):
-    os_times = np.load("OSVersionTimestamps.npy", allow_pickle=True).item()
+    os_times = np.load(f'mapped_data{os.sep}OSVersionTimestamps.npy', allow_pickle=True).item()
     
-    datedictAS = np.load('AvSigVersionTimestamps.npy', allow_pickle=True)[()]
+    datedictAS = np.load(f'mapped_data{os.sep}AvSigVersionTimestamps.npy', allow_pickle=True)[()]
 
     for k,v in os_times.items():
         os_times[k] = v.timestamp()

@@ -46,14 +46,14 @@ if __name__ == "__main__":
     # load the model from disk
     model = None 
     if MODEL_NUM == 2:
-        json_file = open('model.json', 'r')
+        json_file = open(f'saved_models{os.sep}model.json', 'r')
         json_model = json_file.read()
         json_file.close()
         model = model_from_json(json_model)
-        model.load_weights('model.h5')
+        model.load_weights(f'saved_models{os.sep}model.h5')
     
     else:
-        model = joblib.load('model.sav')
+        model = joblib.load(f'saved_models{os.sep}model.sav')
 
     num_of_rows = get_total_rows(test_path) - 1
 

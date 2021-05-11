@@ -46,8 +46,8 @@ class Model:
         X_test = selector.transform(X_test)
 
         # #standardize data
-        # X_train = preprocessing.StandardScaler().fit_transform(X_train)
-        # X_test = preprocessing.StandardScaler().fit_transform(X_test)
+        X_train = preprocessing.StandardScaler().fit_transform(X_train)
+        X_test = preprocessing.StandardScaler().fit_transform(X_test)
         
         return X_train, X_test, y_train, y_test, selector
     

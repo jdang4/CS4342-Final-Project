@@ -130,7 +130,7 @@ if __name__ == "__main__":
 	
 	print('Reading from csv...')
 	
-	train_data = pd.read_csv(train_path, nrows=1000000, dtype=dtypes)
+	train_data = pd.read_csv(train_path, nrows=100000, dtype=dtypes)
 	
 	print('Done\n')
 

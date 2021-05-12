@@ -46,7 +46,7 @@ def repeat_softmax(X, y, preBuilt=False, model=None):
 
 	return model
 
-def repeat_neural_network(X, y, preBuilt=False, model=None):
+def repeat_neural_network(X, y, preBuilt=False, model=None, selector=None):
 	X_train = X 
 	y_train = y
 	
@@ -65,20 +65,21 @@ def repeat_neural_network(X, y, preBuilt=False, model=None):
 		model.add(Activation('relu'))
 		model.add(Dense(1, activation='sigmoid'))
 		model.compile(optimizer=Adam(lr=0.01), loss="binary_crossentropy", metrics=[tf.keras.metrics.AUC()])
+		trees = ExtraTreesClassifier(random_state=1)
+		trees.fit(X_train, y_train)
+		selector = SelectFromModel(trees, prefit=True, threshold=-np.inf)
 		
-	trees = ExtraTreesClassifier(random_state=1)
-	trees.fit(X_train, y_train)
-	selector = SelectFromModel(trees, prefit=True, threshold=-np.inf)
+
 	
 	#NEW X_TRAIN FROM SELECTED FEATURES:
 	X_train = selector.transform(X_train)
 	
 	#standardize data
 	X_train = preprocessing.StandardScaler().fit_transform(X_train)
-	
+	print(X_train.shape)
 	model.fit(X_train, y_train)
 	
-	return model
+	return model, selector
 
 
 def evaluate_model(X, y, model, nn):
@@ -101,110 +102,118 @@ def evaluate_model(X, y, model, nn):
 	
 
 if __name__ == "__main__":
-	
+
 	MODEL_NUM = 1       # 1 - softmax, 2 - neural network
 	TRAIN_CHUNKS = 1    # 0 - False, 1 - True
-	
+
 	model_dict = {
 		1: 'softmax',
 		2: 'neural_network'
 	}
-	
+
 	if len(sys.argv) > 2:
 		MODEL_NUM = int(sys.argv[1])
 		TRAIN_CHUNKS = int(sys.argv[2])
-		
+
 	elif len(sys.argv) > 1:
 		MODEL_NUM = int(sys.argv[1])
-		
-	data_path = f'data{os.sep}'
+
+	data_path = ""
 	useSubset = False
 	train_path = ""
-	
+
 	if not useSubset:
 		train_path = data_path + 'train.csv'
 	else:
 		train_path = "train_subset.csv"
-	
+
 	dtypes = Transform.get_dtypes()
-	
+
 	print('Reading from csv...')
-	
-	train_data = pd.read_csv(train_path, nrows=1000000, dtype=dtypes)
-	
+
+	train_data = pd.read_csv(train_path, nrows=2000, dtype=dtypes)
+
 	print('Done\n')
 
 	ytr = train_data["HasDetections"].to_numpy()
-	
+
 	print('Transforming Dataframe...')
-	
+
 	train_data = Transform.transform_dataframe(train_data)
-	
+
 	train_data = Transform.transform_categorical(train_data)    # perform one-hot encoding on categorical columns
-	
+
 	labels = list(train_data.columns)
-	
+
 	tmp_df = pd.DataFrame(columns=labels)
 	tmp_df.to_csv('final_train.csv', index=False)
-	
+
 	train_data = train_data.drop(['MachineIdentifier', 'HasDetections'], axis=1)  # drop unnecessary columns
-	
+
 	print('Done\n')
-	
+
 	print('Training model...')
-	
+
 	selection = None
 	model = None
-	
+	chunkSize = 500
 	if TRAIN_CHUNKS == 1:
 		Xtr = train_data.to_numpy(dtype='float64')
 		Xtr = np.nan_to_num(Xtr)
-		
+
 		Xtr_evaluator = np.copy(Xtr)
-		
-		train_chunks = Transform.split_dataframe(train_data, chunk_size=100000)  # 100000
-		ytr_chunks = Transform.split_dataframe(ytr, chunk_size=100000)
-		
-		del train_data 
+
+		train_chunks = Transform.split_dataframe(train_data, chunk_size=chunkSize)  # 100000
+		ytr_chunks = Transform.split_dataframe(ytr, chunk_size=chunkSize)
+
+		del train_data
 		gc.collect()
-		
+
 		list_of_chunks = []
-		
+		selector = None
 		for i,chunk in enumerate(train_chunks):
 			print(f'Chunk #{i}')
 			Xtr = chunk.to_numpy(dtype='float64')
 			Xtr = np.nan_to_num(Xtr)
-   
+
 			if MODEL_NUM == 2:
+
 				if i != 0:
 					model = tf.keras.models.load_model('chunk_model_tf')
-	 
-				model = repeat_neural_network(Xtr, ytr_chunks[i], i>0, model)
-	
+				else:
+					print(chunk)
+				#if i == 0:
+					#ignore = Model(Xtr, ytr_chunks[i], labels, MODEL_NUM)
+
+					#selection, ignore = ignore.train_model()
+				#Xtr = selection.transform(Xtr)
+				print(i)
+				model, selector = repeat_neural_network(Xtr, ytr_chunks[i], i>0, model, selector)
+
 				model.save('chunk_model_tf', save_format='tf')
 
 			else:
 				model = repeat_softmax(Xtr, ytr_chunks[i], i > 0, model)
-   
+
 		del Xtr, train_chunks, ytr_chunks
 		gc.collect()
-  
+
 		print('\nEvaluating Model...')
-		
-		evaluate_model(Xtr_evaluator, ytr, model, MODEL_NUM==2)
-		  
-			
+
+		#leaguevaluate_model(Xtr_evaluator, ytr, model, MODEL_NUM==2)
+
+
 	else:
 		Xtr = train_data.to_numpy(dtype='float64')
 		Xtr = np.nan_to_num(Xtr)
-	
+
 		model = Model(Xtr, ytr, labels, MODEL_NUM)
-		
+
 		selection, model = model.train_model()
-	
-	
+
+
 	print('Done\n')
-	
+
 	# save the model to disk
 	model_name = model_dict.get(MODEL_NUM)
 	
@@ -226,7 +235,7 @@ if __name__ == "__main__":
 	f = open('model_num.pckl', 'wb')
 	pickle.dump(MODEL_NUM, f)
 	f.close()
-	
+
 	print(f'{model_name} model saved')
 	
 	

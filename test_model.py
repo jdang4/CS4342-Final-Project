@@ -21,7 +21,7 @@ if __name__ == "__main__":
     MODEL_NUM = pickle.load(f)
     f.close()
     
-    data_path = f'data{os.sep}'
+    data_path = ""
     useSubset = False
     test_path = ""
     
@@ -29,12 +29,20 @@ if __name__ == "__main__":
     
     print('Reading from csv...')
     
-    test_data = pd.read_csv(test_path)
-    
+    test_data = pd.read_csv(test_path, nrows=10000)
+    print(test_data.shape)
     df = test_data[['MachineIdentifier']].copy()
     
     test_data = test_data.drop(["MachineIdentifier"], axis=1)
-    
+
+    # dtypes = Transform.get_dtypes()
+    # train_data = pd.read_csv("train.csv", nrows=100000, dtype=dtypes)
+    # train_data = Transform.transform_dataframe(train_data)
+    #
+    # train_data = Transform.transform_categorical(train_data)
+    # print(train_data.shape)
+    # test_data = Transform.make_matching(train_data, test_data)
+
     print('Done')
     
     Xte = test_data.to_numpy(dtype='float64')
@@ -48,7 +56,6 @@ if __name__ == "__main__":
         json_file.close()
         model = model_from_json(json_model)
         model.load_weights('model.h5')
-    
     else:
         model = joblib.load('model.sav')
     

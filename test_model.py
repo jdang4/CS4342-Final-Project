@@ -29,19 +29,21 @@ if __name__ == "__main__":
     
     print('Reading from csv...')
     
-    test_data = pd.read_csv(test_path, nrows=10000)
+    test_data = pd.read_csv(test_path)
     print(test_data.shape)
     df = test_data[['MachineIdentifier']].copy()
     
     test_data = test_data.drop(["MachineIdentifier"], axis=1)
-
+    #
     # dtypes = Transform.get_dtypes()
-    # train_data = pd.read_csv("train.csv", nrows=100000, dtype=dtypes)
+    # train_data = pd.read_csv("train.csv", dtype=dtypes, nrows=100)
     # train_data = Transform.transform_dataframe(train_data)
     #
     # train_data = Transform.transform_categorical(train_data)
     # print(train_data.shape)
-    # test_data = Transform.make_matching(train_data, test_data)
+    # print(test_data)
+    # train_data = Transform.make_matching_invert(train_data, test_data)
+    # #test_data = Transform.make_matching(test_data, train_data)
 
     print('Done')
     

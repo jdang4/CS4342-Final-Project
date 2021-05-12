@@ -110,7 +110,8 @@ if __name__ == "__main__":
 		1: 'softmax',
 		2: 'neural_network'
 	}
-
+	test_path = "test_submission2.csv"
+	test_data = pd.read_csv(test_path, nrows=1)
 	if len(sys.argv) > 2:
 		MODEL_NUM = int(sys.argv[1])
 		TRAIN_CHUNKS = int(sys.argv[2])
@@ -131,24 +132,28 @@ if __name__ == "__main__":
 
 	print('Reading from csv...')
 
-	train_data = pd.read_csv(train_path, nrows=2000, dtype=dtypes)
+	train_data = pd.read_csv(train_path, dtype=dtypes)
 
 	print('Done\n')
 
 	ytr = train_data["HasDetections"].to_numpy()
 
+
 	print('Transforming Dataframe...')
 
+	train_data = train_data.drop(['MachineIdentifier', 'HasDetections'], axis=1)  # drop unnecessary columns
 	train_data = Transform.transform_dataframe(train_data)
 
 	train_data = Transform.transform_categorical(train_data)    # perform one-hot encoding on categorical columns
 
-	labels = list(train_data.columns)
+	train_data = Transform.make_matching_invert(train_data, test_data)
 
+	labels = list(train_data.columns)
+	print(train_data.shape)
 	tmp_df = pd.DataFrame(columns=labels)
 	tmp_df.to_csv('final_train.csv', index=False)
 
-	train_data = train_data.drop(['MachineIdentifier', 'HasDetections'], axis=1)  # drop unnecessary columns
+
 
 	print('Done\n')
 
@@ -156,7 +161,7 @@ if __name__ == "__main__":
 
 	selection = None
 	model = None
-	chunkSize = 500
+	chunkSize = 100000
 	if TRAIN_CHUNKS == 1:
 		Xtr = train_data.to_numpy(dtype='float64')
 		Xtr = np.nan_to_num(Xtr)

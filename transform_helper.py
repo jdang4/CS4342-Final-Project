@@ -223,11 +223,25 @@ def label_appVersion_count(df):
     
     return df
 
+
+def make_matching_invert(train, test):
+    l1 = list(train.columns)
+    l2 = list(test.columns)
+    diff = list(set(l1) - set(l2))
+    print(l1)
+    print(l2)
+    print(diff)
+    train = train.drop(diff, axis=1)
+
+    return train
+
 def make_matching(train, test):
     l1 = list(train.columns)
     l2 = list(test.columns)
     diff = list(set(l2) - set(l1))
-    
+    print(l1)
+    print(l2)
+    print(diff)
     test = test.drop(diff, axis=1)
     
     

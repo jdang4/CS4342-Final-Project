@@ -160,7 +160,7 @@ if __name__ == "__main__":
 		Xtr = train_data.to_numpy(dtype='float64')
 		Xtr = np.nan_to_num(Xtr)
 		
-		Xtr_evaluator = np.copy(Xtr)
+		#Xtr_evaluator = np.copy(Xtr)
 		
 		train_chunks = Transform.split_dataframe(train_data, chunk_size=100000)  # 100000
 		ytr_chunks = Transform.split_dataframe(ytr, chunk_size=100000)
@@ -191,7 +191,7 @@ if __name__ == "__main__":
   
 		print('\nEvaluating Model...')
 		
-		evaluate_model(Xtr_evaluator, ytr, model, MODEL_NUM==2)
+		#evaluate_model(Xtr_evaluator, ytr, model, MODEL_NUM==2)
 		  
 			
 	else:
@@ -200,7 +200,7 @@ if __name__ == "__main__":
 	
 		model = Model(Xtr, ytr, labels, MODEL_NUM)
 		
-		selection, model = model.train_model()
+		model = model.train_model()
 	
 	
 	print('Done\n')

@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectFromModel
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import ExtraTreesClassifier
 from matplotlib import pyplot
 import sys, math, joblib, gc
@@ -28,6 +29,9 @@ class Model:
     def train_model(self):
         if self.model_num == 2:
             return self.perform_neural_network()
+
+        elif self.model_num == 3:
+            return self.perform_random_forest()
         
         else:
             return self.perform_softmax()
@@ -79,7 +83,7 @@ class Model:
         print("\n########################################################\n")
     
     
-    def perform_softmax(self, plot=False, display_feature=False):
+    def perform_softmax(self):
         
         X_train, X_test, y_train, y_test, selector = self.preprocess_data()
         
@@ -93,16 +97,24 @@ class Model:
         score = metrics.roc_auc_score(y_test, yhat, average=None)
     
         print(f"\nAUC Score: {score}\n")
+
+        return model
+
+
+    def perform_random_forest(self):
+        X_train, X_test, y_train, y_test, selector = self.preprocess_data()
+
+        model = RandomForestClassifier(n_estimators=200, min_samples_leaf=20, n_jobs=-1)
+        model.fit(X_train, y_train)
+        yhat = model.predict_proba(X_test)
+
+        yhat = yhat[:, 1]
+
+        score = metrics.roc_auc_score(y_test, yhat, average=None)
     
-        if display_feature:
-            feature_importance(X_train, y_train, selector)
-    
-        if plot:
-            metrics.plot_roc_curve(model, X_test, y_test)
-            plt.show()
-    
-    
-        return selector, model
+        print(f"\nAUC Score: {score}\n")
+
+        return model
     
     
     def perform_neural_network(self):
@@ -129,6 +141,6 @@ class Model:
         
         print(f"\nAUC Score: {score}\n")
         
-        return selector, model
+        return model
 
         

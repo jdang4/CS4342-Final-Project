@@ -29,7 +29,7 @@ if __name__ == "__main__":
     
     print('Reading from csv...')
     
-    test_data = pd.read_csv(test_path, , nrows=2000000)
+    test_data = pd.read_csv(test_path, nrows=100000)
     
     df = test_data[['MachineIdentifier']].copy()
     

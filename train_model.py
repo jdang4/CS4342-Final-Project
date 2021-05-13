@@ -107,7 +107,8 @@ if __name__ == "__main__":
 	
 	model_dict = {
 		1: 'softmax',
-		2: 'neural_network'
+		2: 'neural_network',
+		3: 'random_forest'
 	}
 	
 	if len(sys.argv) > 2:
@@ -118,19 +119,15 @@ if __name__ == "__main__":
 		MODEL_NUM = int(sys.argv[1])
 		
 	data_path = f'data{os.sep}'
-	useSubset = False
 	train_path = ""
 	
-	if not useSubset:
-		train_path = data_path + 'train.csv'
-	else:
-		train_path = "train_subset.csv"
+	train_path = data_path + 'train.csv'
 	
 	dtypes = Transform.get_dtypes()
 	
 	print('Reading from csv...')
 	
-	train_data = pd.read_csv(train_path, nrows=1000, dtype=dtypes)
+	train_data = pd.read_csv(train_path, nrows=100000, dtype=dtypes)
 	
 	print('Done\n')
 
@@ -141,12 +138,18 @@ if __name__ == "__main__":
 	train_data = Transform.transform_dataframe(train_data)
 	
 	train_data = Transform.transform_categorical(train_data)    # perform one-hot encoding on categorical columns
+
+	# ONLY NEED FOR FULL NEURAL NETWORK 
+	# if os.path.isfile("test_submission2.csv"):
+	# 	test_path = "test_submission2.csv"
+	# 	test_data = pd.read_csv(test_path, nrows=1)
+	# 	train_data = Transform.make_matching_invert(train_data, test_data)
 	
 	labels = list(train_data.columns)
 	
 	tmp_df = pd.DataFrame(columns=labels)
 	tmp_df.to_csv('final_train.csv', index=False)
-	
+
 	train_data = train_data.drop(['MachineIdentifier', 'HasDetections'], axis=1)  # drop unnecessary columns
 	
 	print('Done\n')

@@ -25,11 +25,11 @@ if __name__ == "__main__":
     
     train_data = pd.read_csv(train_path, dtype=dtypes)
     #test_data = pd.read_csv(test_path, nrows=7853253, dtype=dtypes)
-    test_data = pd.read_csv(test_path, nrows=2000000, dtype=dtypes)
+    test_data = pd.read_csv(test_path, nrows=100000, dtype=dtypes)
     
     test_data = Transform.transform_dataframe(test_data)
     
-    test_chunks = Transform.split_dataframe(test_data, chunk_size=100)
+    test_chunks = Transform.split_dataframe(test_data, chunk_size=1000)
     
     train_cols = list(train_data.columns)
     

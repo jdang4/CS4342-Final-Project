@@ -15,7 +15,6 @@ import transform_helper as Transform
 
 import pickle
 
-CHUNK_SIZE = 233
 
 def get_total_rows(filepath):
     count = 0
@@ -57,22 +56,32 @@ if __name__ == "__main__":
 
     num_of_rows = get_total_rows(test_path) - 1
 
-    num_chunks = num_of_rows // CHUNK_SIZE + 1
+    chunk_size = 10000
+
+    num_chunks = num_of_rows // chunk_size + 1
 
     list_of_chunks = []
 
     for i in range(0, num_chunks):
-        start = i * CHUNK_SIZE + 1 if i != 0 else 1
-        end = (i + 1) * CHUNK_SIZE 
+        start = i * chunk_size + 1 if i != 0 else 1
+        end = (i + 1) * chunk_size 
         row_range = (start, end)
 
         list_of_chunks.append(row_range)
     
     rows_to_skip = []
 
+    print(list_of_chunks)
+    input('stop')
+
+    print('Starting...\n')
     for i in range(len(list_of_chunks)):
+        print(f'Chunk #{i}')
         start, end = list_of_chunks[i]
         row_range = end - start + 1
+
+        if start >= num_of_rows:
+            break
 
         test_data = pd.read_csv(test_path, skiprows=rows_to_skip, nrows=row_range)
         rows_to_skip = update_skip(rows_to_skip, start, end)
@@ -99,10 +108,10 @@ if __name__ == "__main__":
         df.insert(1, "HasDetections", results)
         
         if i == 0:
-            df.to_csv("submission2.csv", index=False)
+            df.to_csv("submission_chunks.csv", index=False)
 
         else:
-            df.to_csv("submission2.csv", mode='a', index=False, header=False)
+            df.to_csv("submission_chunks.csv", mode='a', index=False, header=False)
     
     
     

@@ -71,9 +71,6 @@ if __name__ == "__main__":
     
     rows_to_skip = []
 
-    print(list_of_chunks)
-    input('stop')
-
     print('Starting...\n')
     for i in range(len(list_of_chunks)):
         print(f'Chunk #{i}')
@@ -100,7 +97,7 @@ if __name__ == "__main__":
 
         yte = model.predict_proba(Xte)
     
-        results = yte[:,1] if MODEL_NUM == 1 else yte
+        results = yte if MODEL_NUM == 2 else yte[:,1]
 
         del Xte
         gc.collect()

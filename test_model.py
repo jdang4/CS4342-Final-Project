@@ -57,7 +57,7 @@ if __name__ == "__main__":
     
     yte = model.predict_proba(Xte)
     
-    results = yte[:,1] if MODEL_NUM == 1 else yte
+    results = yte if MODEL_NUM == 2 else yte[:,1]
     
     df.insert(1, "HasDetections", results)
     df.to_csv("submission.csv", index=False)

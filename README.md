@@ -28,3 +28,6 @@ In an effort to conserve resources on the machine, we split our code into sepera
     * there also consists of other saved models that are in folders. These models are the old models that we saved that are not optimized but used to compare final models to these older unoptimized models
 * find_optimize_hyperparameters.py
     * script to retrieve the optimized hyperparameters for the Neural Network model
+
+## NOTE
+* we set the number of rows to read from both the training and testing dataset to be 100K to allow others with a decent machine to run the code to completition
